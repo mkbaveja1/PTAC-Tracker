@@ -1,0 +1,54 @@
+PTAC/
+├── app.py
+├── requirements.txt
+├── current.md
+├── PROJECT_OVERVIEW.md
+├── ARCHITECTURE.md
+├── COMPONENTS.md
+├── DESIGN_SYSTEM.md
+├── DATA_FLOW.md
+├── TODO.md
+├── README.md
+├── CLAUDE_CONTEXT.md
+├── CHANGELOG.md
+├── PROJECT_STATE.md
+├── DIRECTORY_TREE.txt
+├── .streamlit/
+│   ├── config.toml
+│   └── secrets.toml.example
+├── supabase/
+│   └── rls_policies.sql
+└── views/
+    ├── __init__.py
+    ├── _shared.py
+    ├── dashboard.py
+    ├── directory.py
+    ├── unit_detail.py
+    ├── scanner.py
+    ├── avery.py
+    ├── analytics.py
+    └── doyle.py
+
+Notes:
+- __pycache__/ directories exist at runtime but are excluded (Python bytecode)
+- .git/ exists but is excluded (version control internals)
+- .streamlit/secrets.toml is gitignored — create locally from secrets.toml.example
+- seed.py completed — initial inventory bootstrapped in Supabase (script may live outside repo)
+
+File counts (source only):
+  Python modules:  10  (app.py + 9 views)
+  Config files:     2  (.streamlit/config.toml, secrets.toml.example)
+  SQL scripts:      1  (supabase/rls_policies.sql)
+  Documentation:   12  (including this tree file)
+  Dependencies:     1  (requirements.txt)
+
+Lines of code (approximate):
+  app.py:           129
+  views/_shared.py: 421
+  views/unit_detail.py: 626
+  views/dashboard.py:   462
+  views/directory.py:   418
+  views/avery.py:       376
+  views/doyle.py:       274
+  views/analytics.py:   150
+  views/scanner.py:      44

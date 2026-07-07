@@ -1,0 +1,16 @@
+# Python (legacy Streamlit app)
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
+
+# Environment files — never commit secrets
+.env
+.env.*
+!.env.local.example
+
+# Node (web/ has its own .gitignore too)
+node_modules/
+.next/
+
+# OS
+.DS_Store
