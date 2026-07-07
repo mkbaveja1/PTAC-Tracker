@@ -1,6 +1,8 @@
 // Ported one-to-one from views/_shared.py display helpers.
 // display_status() logic must stay consistent — every page depends on these labels.
 
+import { addMonths } from "date-fns";
+
 import type { DoyleRepair, PtacUnit } from "@/types/database";
 
 export function isAtMaintenanceOffice(unit: PtacUnit | null | undefined): boolean {
@@ -33,6 +35,33 @@ export function btuFromModel(modelSpecs: string | null | undefined): string {
 
 export function shortBtuFromModel(modelSpecs: string | null | undefined): string {
   return btuFromModel(modelSpecs).replace(",000", "K");
+}
+
+// A unit is PM-overdue when its last PM (or its install date, if never
+// PM'd) is older than the configured interval. The interval is an app
+// setting (default 6 months = twice a year), not a hardcoded rule.
+export function isPmOverdue(
+  unit: PtacUnit | null | undefined,
+  intervalMonths: number
+): boolean {
+  if (!unit) return false;
+  const reference = unit.last_pm_date ?? unit.created_at;
+  if (!reference) return false;
+  const referenceDate = new Date(String(reference).slice(0, 10));
+  if (isNaN(referenceDate.getTime())) return false;
+  return addMonths(referenceDate, intervalMonths) <= new Date();
+}
+
+// displayStatus() plus schedule awareness: an Active unit whose routine PM
+// is overdue shows as "Needs PM" everywhere (tiles, pills, KPIs) without a
+// technician having to flip the status by hand.
+export function effectiveDisplayStatus(
+  unit: PtacUnit | null | undefined,
+  intervalMonths: number
+): string {
+  const status = displayStatus(unit);
+  if (status === "Active" && isPmOverdue(unit, intervalMonths)) return "Needs PM";
+  return status;
 }
 
 // Tile styles matching dashboard_status_style() hex values (DESIGN_SYSTEM.md).

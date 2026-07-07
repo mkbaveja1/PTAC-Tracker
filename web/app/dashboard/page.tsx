@@ -4,7 +4,8 @@ import Link from "next/link";
 
 import { UnitTile } from "@/components/dashboard/unit-tile";
 import { FLOORS, ROOM_SUFFIXES } from "@/lib/domain/constants";
-import { isAtMaintenanceOffice } from "@/lib/domain/display";
+import { effectiveDisplayStatus, isAtMaintenanceOffice } from "@/lib/domain/display";
+import { usePmIntervalMonths } from "@/lib/hooks/use-settings";
 import { useUnits } from "@/lib/hooks/use-units";
 import type { PtacUnit } from "@/types/database";
 
@@ -19,6 +20,7 @@ function hallwaySortKey(unit: PtacUnit): number {
 
 export default function DashboardPage() {
   const { data: allUnits = [], isLoading, error } = useUnits();
+  const pmIntervalMonths = usePmIntervalMonths();
 
   if (error) {
     return (
@@ -34,9 +36,13 @@ export default function DashboardPage() {
 
   const totalCount = allUnits.length;
   const activeTotal = allUnits.filter(
-    (u) => u.status === "Active" && u.location_type !== "Spare"
+    (u) =>
+      effectiveDisplayStatus(u, pmIntervalMonths) === "Active" && u.location_type !== "Spare"
   ).length;
-  const pmOverdueTotal = allUnits.filter((u) => u.status === "Needs PM").length;
+  // Counts manually flagged units plus any Active unit past its PM schedule.
+  const pmOverdueTotal = allUnits.filter(
+    (u) => effectiveDisplayStatus(u, pmIntervalMonths) === "Needs PM"
+  ).length;
   const maintOfficeTotal = allUnits.filter((u) => isAtMaintenanceOffice(u)).length;
   const doyleTotal = allUnits.filter((u) => u.status === "Doyle Shop").length;
 

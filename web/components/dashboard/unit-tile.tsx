@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 
-import { displayStatus, shortBtuFromModel, statusTileClasses } from "@/lib/domain/display";
+import { effectiveDisplayStatus, shortBtuFromModel, statusTileClasses } from "@/lib/domain/display";
+import { usePmIntervalMonths } from "@/lib/hooks/use-settings";
 import type { PtacUnit } from "@/types/database";
 
 // BTU label shown in each tile (btu_label in views/dashboard.py).
@@ -21,7 +22,8 @@ interface UnitTileProps {
 
 // Port of make_cell(): one color-coded tile; real units link to unit detail.
 export function UnitTile({ label, unit, displayLabel }: UnitTileProps) {
-  const status = displayStatus(unit);
+  const pmIntervalMonths = usePmIntervalMonths();
+  const status = effectiveDisplayStatus(unit, pmIntervalMonths);
   const ptacId = unit?.ptac_id ?? "No unit";
   const mainLabel = displayLabel ?? label;
 

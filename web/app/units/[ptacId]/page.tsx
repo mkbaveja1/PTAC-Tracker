@@ -11,7 +11,8 @@ import { HistoryFeed } from "@/components/units/history-feed";
 import { OnsiteRepairDialog } from "@/components/units/onsite-repair-dialog";
 import { PmDialog } from "@/components/units/pm-dialog";
 import { QrCard } from "@/components/units/qr-card";
-import { btuFromModel, displayStatus, statusPillClasses } from "@/lib/domain/display";
+import { btuFromModel, effectiveDisplayStatus, statusPillClasses } from "@/lib/domain/display";
+import { usePmIntervalMonths } from "@/lib/hooks/use-settings";
 import { useUnit } from "@/lib/hooks/use-units";
 
 interface ActionTileProps {
@@ -42,6 +43,7 @@ export default function UnitDetailPage({ params }: { params: Promise<{ ptacId: s
   const ptacId = decodeURIComponent(rawPtacId).toUpperCase();
 
   const { data: unit, isLoading, error } = useUnit(ptacId);
+  const pmIntervalMonths = usePmIntervalMonths();
 
   if (isLoading) {
     return <div className="p-10 text-center text-sm font-bold text-slate-400">Loading unit…</div>;
@@ -58,7 +60,7 @@ export default function UnitDetailPage({ params }: { params: Promise<{ ptacId: s
     );
   }
 
-  const status = displayStatus(unit);
+  const status = effectiveDisplayStatus(unit, pmIntervalMonths);
 
   return (
     <div>

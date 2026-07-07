@@ -13,7 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SpareRegistrationForm } from "@/components/directory/spare-registration-form";
-import { btuFromModel, displayStatus, statusPillClasses } from "@/lib/domain/display";
+import {
+  btuFromModel,
+  displayStatus,
+  effectiveDisplayStatus,
+  statusPillClasses,
+} from "@/lib/domain/display";
+import { usePmIntervalMonths } from "@/lib/hooks/use-settings";
 import { useUnits } from "@/lib/hooks/use-units";
 import type { PtacUnit } from "@/types/database";
 
@@ -66,6 +72,7 @@ function searchText(unit: PtacUnit): string {
 
 export default function DirectoryPage() {
   const { data: allUnits = [], isLoading, error } = useUnits();
+  const pmIntervalMonths = usePmIntervalMonths();
   const [showAddSpare, setShowAddSpare] = useState(false);
   const [query, setQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("All Locations");
@@ -83,7 +90,11 @@ export default function DirectoryPage() {
   const filteredUnits = allUnits.filter((unit) => {
     if (trimmedQuery && !searchText(unit).includes(trimmedQuery)) return false;
     if (!matchesLocationFilter(unit, locationFilter)) return false;
-    if (statusFilter !== "All Statuses" && displayStatus(unit) !== statusFilter) return false;
+    if (
+      statusFilter !== "All Statuses" &&
+      effectiveDisplayStatus(unit, pmIntervalMonths) !== statusFilter
+    )
+      return false;
     return true;
   });
 
@@ -169,7 +180,7 @@ export default function DirectoryPage() {
         )}
 
         {filteredUnits.map((unit) => {
-          const status = displayStatus(unit);
+          const status = effectiveDisplayStatus(unit, pmIntervalMonths);
           return (
             <div
               key={unit.ptac_id}

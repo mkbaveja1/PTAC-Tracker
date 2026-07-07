@@ -10,6 +10,7 @@ import {
   inferLocationType,
   targetStatusForLocation,
 } from "@/lib/domain/locations";
+import { fetchTransfers } from "./logs";
 import { fetchUnits, updateUnitLocation } from "./units";
 import type { CustodyTransfer, PtacUnit } from "@/types/database";
 
@@ -60,6 +61,16 @@ export async function completeDoyleRepair(input: CompleteDoyleRepairInput): Prom
   const technician = input.technician.trim();
   const todayStr = format(new Date(), "yyyy-MM-dd");
 
+  // The unit was sent to Doyle when its custody transfer to the shop was
+  // logged — use that date, not today, so sent_date reflects reality.
+  const transfers = await fetchTransfers(input.ptacId);
+  const dispatchTransfer = transfers.find((transfer) =>
+    (transfer.to_location ?? "").includes("Doyle")
+  );
+  const sentDate = dispatchTransfer?.transfer_date
+    ? String(dispatchTransfer.transfer_date).slice(0, 10)
+    : todayStr;
+
   let transferNotes =
     `Doyle return invoice ${input.invoice}. Parts: ${allParts.join(", ") || "None"}. ${input.notes}`.trim();
 
@@ -77,7 +88,7 @@ export async function completeDoyleRepair(input: CompleteDoyleRepairInput): Prom
 
   const { error: repairError } = await supabase.from("doyle_repairs").insert({
     ptac_id: input.ptacId,
-    sent_date: todayStr,
+    sent_date: sentDate,
     return_date: todayStr,
     doyle_diagnosis: `Invoice ${input.invoice}. ${input.notes}`.trim(),
     labor_cost: 0,
