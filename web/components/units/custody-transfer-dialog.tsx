@@ -26,6 +26,7 @@ import {
   activeUnitAtLocation,
   allowedTransferPaths,
   corridorOptions,
+  isSingleOccupancyLocation,
   resolveTargetLocation,
   roomOptions,
   targetStatusForLocation,
@@ -59,7 +60,10 @@ export function CustodyTransferDialog({
   const routeOptions = allowedTransferPaths(unit);
   const targetLocation = resolveTargetLocation(route, roomChoice, corridorChoice);
   const occupyingUnit = useMemo(
-    () => (targetLocation ? activeUnitAtLocation(allUnits, targetLocation, unit.ptac_id) : null),
+    () =>
+      targetLocation && isSingleOccupancyLocation(targetLocation)
+        ? activeUnitAtLocation(allUnits, targetLocation, unit.ptac_id)
+        : null,
     [allUnits, targetLocation, unit.ptac_id]
   );
 

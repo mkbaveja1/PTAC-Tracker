@@ -51,6 +51,13 @@ export function targetStatusForLocation(location: string): string {
   return "Active";
 }
 
+// Only single-slot locations can be "occupied": one PTAC per guest room,
+// hallway slot, or elevator closet. Maintenance Office, Doyle Shop, and
+// Spare Storage hold any number of units at once.
+export function isSingleOccupancyLocation(location: string): boolean {
+  return ["Room", "Hallway", "Elevator Closet"].includes(inferLocationType(location));
+}
+
 export function activeUnitAtLocation(
   units: PtacUnit[],
   targetLocation: string,
