@@ -21,8 +21,11 @@ export function roomOptions(): string[] {
   return rooms;
 }
 
+// Matches the live data naming ("Floor N Corridor"). The transfer dropdown
+// must offer the same names units are stored under, or occupancy checks and
+// dashboard grouping silently miss each other.
 export function corridorOptions(): string[] {
-  return FLOORS.map((floor) => `Floor ${floor} Hallway`);
+  return FLOORS.map((floor) => `Floor ${floor} Corridor`);
 }
 
 export function locationOptions(): string[] {
@@ -58,14 +61,17 @@ export function isSingleOccupancyLocation(location: string): boolean {
   return ["Room", "Hallway", "Elevator Closet"].includes(inferLocationType(location));
 }
 
-export function activeUnitAtLocation(
+// Any unit physically at the target location occupies it — regardless of its
+// status label. (Checking status === "Active" missed "Needs PM" occupants and
+// wrongly blocked multi-capacity spots when a status label drifted.)
+export function occupantAtLocation(
   units: PtacUnit[],
   targetLocation: string,
   currentPtacId: string
 ): PtacUnit | null {
   for (const unit of units) {
     if (unit.ptac_id === currentPtacId) continue;
-    if (unit.current_location_name === targetLocation && unit.status === "Active") {
+    if (unit.current_location_name === targetLocation) {
       return unit;
     }
   }

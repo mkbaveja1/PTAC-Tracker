@@ -18,7 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CORE_COMPONENTS, SPARE_STORAGE } from "@/lib/domain/constants";
 import { btuFromModel, displayStatus } from "@/lib/domain/display";
-import { activeUnitAtLocation, roomOptions } from "@/lib/domain/locations";
+import { occupantAtLocation, roomOptions } from "@/lib/domain/locations";
 import { latestDoyleDispatchNote, OCCUPIED_ROOM_OVERRIDE_REQUIRED } from "@/lib/api/doyle";
 import { useTransfers, useUnits } from "@/lib/hooks/use-units";
 import { useDoyleCompletionMutation } from "@/lib/hooks/use-unit-mutations";
@@ -69,7 +69,7 @@ export default function DoylePortalPage() {
 
   const occupyingUnit =
     form.route === ROUTE_ROOM && form.targetRoom && selectedUnit
-      ? activeUnitAtLocation(units, form.targetRoom, selectedUnit.ptac_id)
+      ? occupantAtLocation(units, form.targetRoom, selectedUnit.ptac_id)
       : null;
 
   const resetForm = () => setForm({ ...EMPTY_FORM, components: new Set() });
@@ -269,7 +269,7 @@ export default function DoylePortalPage() {
 
                 {occupyingUnit && (
                   <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">
-                    {form.targetRoom} already has active unit {occupyingUnit.ptac_id}. If you
+                    {form.targetRoom} is already occupied by unit {occupyingUnit.ptac_id}. If you
                     continue, that existing unit will be moved to Maintenance Office.
                   </p>
                 )}

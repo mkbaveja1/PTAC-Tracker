@@ -17,6 +17,7 @@ import {
   btuFromModel,
   displayStatus,
   effectiveDisplayStatus,
+  isAtMaintenanceOffice,
   statusPillClasses,
 } from "@/lib/domain/display";
 import { usePmIntervalMonths } from "@/lib/hooks/use-settings";
@@ -51,8 +52,7 @@ function matchesLocationFilter(unit: PtacUnit, filter: string): boolean {
   if (filter === "Hallways") return locationType === "Hallway";
   if (filter === "Elevator Closet") return locationType === "Elevator Closet";
   if (filter === "Storage / Spares") return locationType === "Spare";
-  if (filter === "Maintenance Office")
-    return status === "Maintenance Office" || locationType === "Maintenance Office";
+  if (filter === "Maintenance Office") return isAtMaintenanceOffice(unit);
   if (filter === "Doyle Shop") return status === "Doyle Shop" || locationType === "Doyle Shop";
   return true;
 }

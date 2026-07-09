@@ -23,10 +23,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  activeUnitAtLocation,
   allowedTransferPaths,
   corridorOptions,
   isSingleOccupancyLocation,
+  occupantAtLocation,
   resolveTargetLocation,
   roomOptions,
   targetStatusForLocation,
@@ -62,7 +62,7 @@ export function CustodyTransferDialog({
   const occupyingUnit = useMemo(
     () =>
       targetLocation && isSingleOccupancyLocation(targetLocation)
-        ? activeUnitAtLocation(allUnits, targetLocation, unit.ptac_id)
+        ? occupantAtLocation(allUnits, targetLocation, unit.ptac_id)
         : null,
     [allUnits, targetLocation, unit.ptac_id]
   );
@@ -234,8 +234,8 @@ export function CustodyTransferDialog({
 
           {occupyingUnit && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">
-              {targetLocation} already has active unit {occupyingUnit.ptac_id}. If you continue,
-              that existing unit will be moved to Maintenance Office and logged.
+              {targetLocation} is already occupied by unit {occupyingUnit.ptac_id}. If you
+              continue, that existing unit will be moved to Maintenance Office and logged.
             </p>
           )}
 

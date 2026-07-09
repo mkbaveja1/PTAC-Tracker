@@ -6,8 +6,8 @@ import { format } from "date-fns";
 
 import { supabase } from "@/lib/supabase/client";
 import {
-  activeUnitAtLocation,
   inferLocationType,
+  occupantAtLocation,
   targetStatusForLocation,
 } from "@/lib/domain/locations";
 import { fetchTransfers } from "./logs";
@@ -45,7 +45,7 @@ export async function completeDoyleRepair(input: CompleteDoyleRepairInput): Prom
   const allUnits = await fetchUnits();
   let occupyingUnit: PtacUnit | null = null;
   if (input.targetLocation && inferLocationType(input.targetLocation) === "Room") {
-    occupyingUnit = activeUnitAtLocation(allUnits, input.targetLocation, input.ptacId);
+    occupyingUnit = occupantAtLocation(allUnits, input.targetLocation, input.ptacId);
   }
 
   if (occupyingUnit && !input.overrideOccupied) {

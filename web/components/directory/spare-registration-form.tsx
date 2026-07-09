@@ -50,7 +50,13 @@ export function SpareRegistrationForm({
       setSerialNumber("");
       onDone();
     } catch (error) {
-      toast.error(`Registration failed: ${(error as Error).message}`);
+      // 23505 = unique violation: someone else registered a spare at the same
+      // time and took this ID. The list refetches, producing a fresh next ID.
+      if ((error as { code?: string }).code === "23505") {
+        toast.error(`${newId} was just taken by another registration — please try again.`);
+      } else {
+        toast.error(`Registration failed: ${(error as Error).message}`);
+      }
     }
   };
 
