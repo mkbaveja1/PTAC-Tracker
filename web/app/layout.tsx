@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { AppHeader } from "@/components/layout/app-header";
+import { AuthGate } from "@/components/auth/auth-gate";
 import { Providers } from "./providers";
 
 const geistSans = Geist({
@@ -33,8 +34,10 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-900">
         <Providers>
-          <AppHeader />
-          <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-6">{children}</main>
+          <AuthGate>
+            <AppHeader />
+            <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-6">{children}</main>
+          </AuthGate>
         </Providers>
       </body>
     </html>
