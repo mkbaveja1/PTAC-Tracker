@@ -57,7 +57,7 @@ export function CustodyTransferDialog({
   const { data: allUnits = [] } = useUnits();
   const transferMutation = useTransferMutation();
 
-  const routeOptions = allowedTransferPaths(unit);
+  const routeOptions = allowedTransferPaths();
   const targetLocation = resolveTargetLocation(route, roomChoice, corridorChoice);
   const occupyingUnit = useMemo(
     () =>

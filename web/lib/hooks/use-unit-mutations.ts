@@ -4,9 +4,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
   deleteUnit,
+  editUnitSpecifications,
   registerSpareUnit,
   updateUnitLocation,
-  updateUnitSpecs,
+  type EditUnitInput,
   type RegisterSpareInput,
   type UpdateUnitLocationInput,
 } from "@/lib/api/units";
@@ -73,12 +74,12 @@ export function useRegisterSpareMutation() {
   });
 }
 
-export function useUpdateSpecsMutation() {
+export function useEditSpecsMutation() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (input: { ptacId: string; modelSpecs: string; serialNumber: string }) =>
-      updateUnitSpecs(input.ptacId, input.modelSpecs, input.serialNumber),
-    onSuccess: () => invalidate(["units"]),
+    mutationFn: (input: EditUnitInput) => editUnitSpecifications(input),
+    // Location edits log a transfer, so refresh history too.
+    onSuccess: () => invalidate(["units", "transfers"]),
   });
 }
 

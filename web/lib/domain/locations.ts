@@ -1,9 +1,8 @@
-// Ported one-to-one from views/_shared.py and views/unit_detail.py.
-// allowedTransferPaths() / resolveTargetLocation() encode hotel operational
-// policy — the rules must match the Python reference exactly.
+// Location helpers ported from views/_shared.py + views/unit_detail.py, with
+// two owner-requested changes: corridors are two-per-floor (Floor NA/NB) and
+// custody transfers allow moving any unit to any destination.
 
 import { FLOORS, ROOM_SUFFIXES, SPARE_STORAGE } from "./constants";
-import { displayStatus } from "./display";
 import type { PtacUnit } from "@/types/database";
 
 export function roomOptions(): string[] {
@@ -21,11 +20,10 @@ export function roomOptions(): string[] {
   return rooms;
 }
 
-// Matches the live data naming ("Floor N Corridor"). The transfer dropdown
-// must offer the same names units are stored under, or occupancy checks and
-// dashboard grouping silently miss each other.
+// Two hallway slots per floor (e.g. "Floor 2A", "Floor 2B"). Units can also be
+// given a fully custom hallway name via the Edit Specifications dialog.
 export function corridorOptions(): string[] {
-  return FLOORS.map((floor) => `Floor ${floor} Corridor`);
+  return FLOORS.flatMap((floor) => [`Floor ${floor}A`, `Floor ${floor}B`]);
 }
 
 export function locationOptions(): string[] {
@@ -44,8 +42,19 @@ export function inferLocationType(location: string): string {
   if (location === "Doyle Shop") return "Doyle Shop";
   if (location.includes("Storage") || location.includes("Spare")) return "Spare";
   if (location.includes("Hallway") || location.includes("Corridor")) return "Hallway";
+  // Corridor slots like "Floor 2A" / "Floor 6B".
+  if (/^Floor\s+\d+[A-Za-z]$/.test(location)) return "Hallway";
   if (location.includes("Elevator")) return "Elevator Closet";
   return "Room";
+}
+
+// The status a unit should carry given its location type. Rooms, hallways,
+// the elevator closet, and spares are all "Active"; the office and shop keep
+// their own status so display/grouping stays correct.
+export function statusForLocationType(locationType: string): string {
+  if (locationType === "Maintenance Office") return "Maintenance Office";
+  if (locationType === "Doyle Shop") return "Doyle Shop";
+  return "Active";
 }
 
 export function targetStatusForLocation(location: string): string {
@@ -95,26 +104,18 @@ export type TransferRoute =
   | "Maintenance Office"
   | "Doyle Shop";
 
-export function allowedTransferPaths(unit: PtacUnit): TransferRoute[] {
-  const status = displayStatus(unit);
-  const locationType = unit.location_type;
-
-  if (
-    ["Active", "Needs PM"].includes(status) &&
-    ["Room", "Hallway", "Elevator Closet"].includes(locationType ?? "")
-  ) {
-    return ["Maintenance Office", "Doyle Shop"];
-  }
-  if (status === "Doyle Shop") {
-    return ["Spare Storage", "Guest Room", "Maintenance Office"];
-  }
-  if (status === "Maintenance Office") {
-    return ["Guest Room", "Corridor/Hallway", "Elevator Closet", "Spare Storage", "Doyle Shop"];
-  }
-  if (status === "Spare/Storage") {
-    return ["Guest Room", "Corridor/Hallway", "Elevator Closet", "Maintenance Office", "Doyle Shop"];
-  }
-  return ["Maintenance Office", "Doyle Shop"];
+// Any unit can be moved to any destination. The earlier state-based
+// restrictions were removed at the owner's request so a custody transfer is
+// never blocked by a unit's current location or status.
+export function allowedTransferPaths(): TransferRoute[] {
+  return [
+    "Guest Room",
+    "Corridor/Hallway",
+    "Elevator Closet",
+    "Spare Storage",
+    "Maintenance Office",
+    "Doyle Shop",
+  ];
 }
 
 export function resolveTargetLocation(

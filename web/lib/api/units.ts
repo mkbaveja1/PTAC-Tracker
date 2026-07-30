@@ -80,15 +80,41 @@ export async function registerSpareUnit(input: RegisterSpareInput): Promise<void
   if (error) throw error;
 }
 
-export async function updateUnitSpecs(
-  ptacId: string,
-  modelSpecs: string,
-  serialNumber: string
-): Promise<void> {
+export interface EditUnitInput {
+  ptacId: string;
+  modelSpecs: string;
+  serialNumber: string;
+  locationName: string;
+  locationType: string;
+  status: string;
+  // When the location changed, log a custody transfer for the history feed.
+  logTransfer?: { fromLocation: string; technician: string; notes: string };
+}
+
+// Full specification edit: model, serial, and location (name + type + status).
+// If a transfer is supplied, it's written first so the move shows in history.
+export async function editUnitSpecifications(input: EditUnitInput): Promise<void> {
+  if (input.logTransfer) {
+    const { error: transferError } = await supabase.from("custody_transfers").insert({
+      ptac_id: input.ptacId,
+      from_location: input.logTransfer.fromLocation || "Unknown",
+      to_location: input.locationName,
+      technician_name: input.logTransfer.technician,
+      notes: input.logTransfer.notes,
+    });
+    if (transferError) throw transferError;
+  }
+
   const { error } = await supabase
     .from("ptac_units")
-    .update({ model_specs: modelSpecs, serial_number: serialNumber })
-    .eq("ptac_id", ptacId);
+    .update({
+      model_specs: input.modelSpecs,
+      serial_number: input.serialNumber,
+      current_location_name: input.locationName,
+      location_type: input.locationType,
+      status: input.status,
+    })
+    .eq("ptac_id", input.ptacId);
   if (error) throw error;
 }
 
