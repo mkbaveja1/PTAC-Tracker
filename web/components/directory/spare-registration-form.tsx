@@ -9,12 +9,14 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { MODEL_OPTIONS, SPARE_STORAGE } from "@/lib/domain/constants";
-import { nextPtacId } from "@/lib/domain/locations";
+import { availableLocationGroups, nextPtacId } from "@/lib/domain/locations";
 import { useRegisterSpareMutation } from "@/lib/hooks/use-unit-mutations";
 import type { PtacUnit } from "@/types/database";
 
@@ -29,14 +31,19 @@ export function SpareRegistrationForm({
 }) {
   const [modelSpecs, setModelSpecs] = useState<string>(MODEL_OPTIONS[0]);
   const [serialNumber, setSerialNumber] = useState("");
-  const [storageLocation, setStorageLocation] = useState(SPARE_STORAGE);
+  const [location, setLocation] = useState(SPARE_STORAGE);
 
   const registerSpare = useRegisterSpareMutation();
   const newId = nextPtacId(allUnits);
+  const locationGroups = availableLocationGroups(allUnits);
 
   const handleSubmit = async () => {
     if (!serialNumber.trim()) {
       toast.error("Serial number is required.");
+      return;
+    }
+    if (!location) {
+      toast.error("Choose a location for the new unit.");
       return;
     }
     try {
@@ -44,9 +51,9 @@ export function SpareRegistrationForm({
         ptacId: newId,
         serialNumber: serialNumber.trim(),
         modelSpecs,
-        storageLocation: storageLocation.trim() || SPARE_STORAGE,
+        location,
       });
-      toast.success(`${newId} was added as a spare unit.`);
+      toast.success(`${newId} was registered at ${location}.`);
       setSerialNumber("");
       onDone();
     } catch (error) {
@@ -97,12 +104,24 @@ export function SpareRegistrationForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="spare-location">Storage Location</Label>
-          <Input
-            id="spare-location"
-            value={storageLocation}
-            onChange={(event) => setStorageLocation(event.target.value)}
-          />
+          <Label>Initial Location</Label>
+          <Select value={location} onValueChange={setLocation}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose a location..." />
+            </SelectTrigger>
+            <SelectContent>
+              {locationGroups.map((group) => (
+                <SelectGroup key={group.label}>
+                  <SelectLabel>{group.label}</SelectLabel>
+                  {group.options.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

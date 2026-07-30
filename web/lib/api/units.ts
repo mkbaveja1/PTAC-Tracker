@@ -1,7 +1,7 @@
 // Supabase operations on ptac_units + custody_transfers, ported from _shared.py.
 
 import { supabase } from "@/lib/supabase/client";
-import { inferLocationType } from "@/lib/domain/locations";
+import { inferLocationType, statusForLocationType } from "@/lib/domain/locations";
 import type { PtacUnit } from "@/types/database";
 
 const UNIT_COLUMNS =
@@ -63,19 +63,21 @@ export interface RegisterSpareInput {
   ptacId: string;
   serialNumber: string;
   modelSpecs: string;
-  storageLocation: string;
+  location: string;
 }
 
-// Spare units live in ptac_units with location_type = "Spare" — no separate table.
+// Registers a new unit into ptac_units at the chosen location. Type and status
+// follow the location (storage → Spare, a room → active Room unit, etc.), so a
+// unit placed anywhere is classified correctly — no separate spares table.
 export async function registerSpareUnit(input: RegisterSpareInput): Promise<void> {
+  const locationType = inferLocationType(input.location);
   const { error } = await supabase.from("ptac_units").insert({
     ptac_id: input.ptacId,
     serial_number: input.serialNumber,
     model_specs: input.modelSpecs,
-    current_location_name: input.storageLocation,
-    location_type: "Spare",
-    // Supabase status enum does not include Spare/Storage; spares are tracked by location_type.
-    status: "Active",
+    current_location_name: input.location,
+    location_type: locationType,
+    status: statusForLocationType(locationType),
   });
   if (error) throw error;
 }

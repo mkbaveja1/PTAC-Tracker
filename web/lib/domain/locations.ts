@@ -87,6 +87,32 @@ export function occupantAtLocation(
   return null;
 }
 
+export interface LocationGroup {
+  label: string;
+  options: string[];
+}
+
+// Locations that can accept a newly registered unit, grouped for a dropdown.
+// Storage / office / shop always accept units; single-slot spots (rooms,
+// hallway slots, elevator closet) are listed only when currently empty.
+export function availableLocationGroups(units: PtacUnit[]): LocationGroup[] {
+  const occupied = new Set(
+    units.map((unit) => unit.current_location_name).filter((name): name is string => Boolean(name))
+  );
+  const openRooms = roomOptions().filter((loc) => !occupied.has(loc));
+  const openCorridors = corridorOptions().filter((loc) => !occupied.has(loc));
+
+  const groups: LocationGroup[] = [
+    { label: "Storage & Holding", options: [SPARE_STORAGE, "Maintenance Office", "Doyle Shop"] },
+  ];
+  if (openRooms.length) groups.push({ label: "Guest Rooms (open)", options: openRooms });
+  if (openCorridors.length) groups.push({ label: "Hallways (open)", options: openCorridors });
+  if (!occupied.has("Elevator Closet")) {
+    groups.push({ label: "Elevator Closet", options: ["Elevator Closet"] });
+  }
+  return groups;
+}
+
 export function nextPtacId(units: PtacUnit[]): string {
   const numbers = units
     .map((unit) => (unit.ptac_id ?? "").replace("PTAC-", ""))
