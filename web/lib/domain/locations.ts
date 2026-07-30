@@ -105,8 +105,8 @@ export function availableLocationGroups(units: PtacUnit[]): LocationGroup[] {
   const groups: LocationGroup[] = [
     { label: "Storage & Holding", options: [SPARE_STORAGE, "Maintenance Office", "Doyle Shop"] },
   ];
-  if (openRooms.length) groups.push({ label: "Guest Rooms (open)", options: openRooms });
-  if (openCorridors.length) groups.push({ label: "Hallways (open)", options: openCorridors });
+  if (openRooms.length) groups.push({ label: "Guest Rooms (empty)", options: openRooms });
+  if (openCorridors.length) groups.push({ label: "Hallways (empty)", options: openCorridors });
   if (!occupied.has("Elevator Closet")) {
     groups.push({ label: "Elevator Closet", options: ["Elevator Closet"] });
   }
