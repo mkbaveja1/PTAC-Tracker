@@ -55,9 +55,12 @@ export function EditSpecsDialog({ unit, trigger }: { unit: PtacUnit; trigger: Re
     setChangedBy("");
   };
 
-  const locationChanged =
-    locationName.trim() !== (unit.current_location_name ?? "") ||
-    locationType !== (unit.location_type ?? "");
+  const nameChanged = locationName.trim() !== (unit.current_location_name ?? "");
+  const typeChanged = locationType !== (unit.location_type ?? "");
+  // Only a type change counts as a move (logged to history + status update).
+  // Renaming a spot in place — e.g. "Floor 2 Corridor" -> "Floor 2A" — is a
+  // correction, not a move, so it saves quietly with no custody-transfer entry.
+  const isMove = typeChanged;
 
   const handleSubmit = async () => {
     if (!modelSpecs.trim() || !serialNumber.trim()) {
@@ -68,10 +71,14 @@ export function EditSpecsDialog({ unit, trigger }: { unit: PtacUnit; trigger: Re
       toast.error("Location name is required.");
       return;
     }
-    if (locationChanged && !changedBy.trim()) {
+    if (isMove && !changedBy.trim()) {
       toast.error("Enter who's making this change so it can be logged in the unit's history.");
       return;
     }
+
+    const moveNote = nameChanged
+      ? `Moved to ${locationName.trim()} and set type to ${locationType} via Edit Specifications.`
+      : `Location type changed to ${locationType} via Edit Specifications.`;
 
     try {
       await editSpecs.mutateAsync({
@@ -80,19 +87,19 @@ export function EditSpecsDialog({ unit, trigger }: { unit: PtacUnit; trigger: Re
         serialNumber: serialNumber.trim(),
         locationName: locationName.trim(),
         locationType,
-        // Location moves take the status that matches the new type; a
-        // metadata-only edit (model/serial) leaves status untouched.
-        status: locationChanged ? statusForLocationType(locationType) : (unit.status ?? "Active"),
-        logTransfer: locationChanged
+        // A move takes the status matching the new type; a rename or a
+        // metadata-only edit leaves status untouched.
+        status: isMove ? statusForLocationType(locationType) : (unit.status ?? "Active"),
+        logTransfer: isMove
           ? {
               fromLocation: unit.current_location_name ?? "Unknown",
               technician: changedBy.trim(),
-              notes: `Location updated via Edit Specifications to ${locationName.trim()} (${locationType}).`,
+              notes: moveNote,
             }
           : undefined,
       });
       toast.success(
-        locationChanged ? `${unit.ptac_id} updated and moved to ${locationName.trim()}.` : "Specifications updated."
+        isMove ? `${unit.ptac_id} updated — type set to ${locationType}.` : "Specifications updated."
       );
       setOpen(false);
     } catch (error) {
@@ -168,7 +175,7 @@ export function EditSpecsDialog({ unit, trigger }: { unit: PtacUnit; trigger: Re
             </div>
           </div>
 
-          {locationChanged && (
+          {isMove && (
             <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
               <Label htmlFor="edit-changed-by" className="text-amber-900">
                 Changed by (logged in history)
@@ -181,8 +188,8 @@ export function EditSpecsDialog({ unit, trigger }: { unit: PtacUnit; trigger: Re
                 className="bg-white"
               />
               <p className="text-[11px] font-semibold text-amber-800">
-                Moving from {unit.current_location_name || "Unknown"} → {locationName.trim() || "…"}.
-                This will appear in the unit&apos;s history feed.
+                Changing the location type is recorded as a move in the unit&apos;s history feed. A
+                plain rename is not.
               </p>
             </div>
           )}
