@@ -32,6 +32,9 @@ export interface UpdateUnitLocationInput {
   location: string;
   technician: string;
   notes: string;
+  // Explicit type for custom location categories, whose names inferLocationType
+  // can't recognize (e.g. "Rooftop"). Omit for built-in locations.
+  locationType?: string;
 }
 
 // Moves a unit: writes the custody transfer, then updates the live ptac_units row.
@@ -53,7 +56,7 @@ export async function updateUnitLocation(input: UpdateUnitLocationInput): Promis
     .update({
       status: input.status,
       current_location_name: input.location,
-      location_type: inferLocationType(input.location),
+      location_type: input.locationType ?? inferLocationType(input.location),
     })
     .eq("ptac_id", input.ptacId);
   if (updateError) throw updateError;
@@ -64,13 +67,15 @@ export interface RegisterSpareInput {
   serialNumber: string;
   modelSpecs: string;
   location: string;
+  // Explicit type for custom category locations; omit to infer from the name.
+  locationType?: string;
 }
 
 // Registers a new unit into ptac_units at the chosen location. Type and status
 // follow the location (storage → Spare, a room → active Room unit, etc.), so a
 // unit placed anywhere is classified correctly — no separate spares table.
 export async function registerSpareUnit(input: RegisterSpareInput): Promise<void> {
-  const locationType = inferLocationType(input.location);
+  const locationType = input.locationType ?? inferLocationType(input.location);
   const { error } = await supabase.from("ptac_units").insert({
     ptac_id: input.ptacId,
     serial_number: input.serialNumber,

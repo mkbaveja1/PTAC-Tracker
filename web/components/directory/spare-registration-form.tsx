@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { MODEL_OPTIONS, SPARE_STORAGE } from "@/lib/domain/constants";
 import { availableLocationGroups, nextPtacId } from "@/lib/domain/locations";
+import { useEnabledLocationNames } from "@/lib/hooks/use-location-categories";
 import { useRegisterSpareMutation } from "@/lib/hooks/use-unit-mutations";
 import type { PtacUnit } from "@/types/database";
 
@@ -35,7 +36,8 @@ export function SpareRegistrationForm({
 
   const registerSpare = useRegisterSpareMutation();
   const newId = nextPtacId(allUnits);
-  const locationGroups = availableLocationGroups(allUnits);
+  const categoryNames = useEnabledLocationNames();
+  const locationGroups = availableLocationGroups(allUnits, categoryNames);
 
   const handleSubmit = async () => {
     if (!serialNumber.trim()) {
@@ -52,6 +54,8 @@ export function SpareRegistrationForm({
         serialNumber: serialNumber.trim(),
         modelSpecs,
         location,
+        // A custom category's name is also its type; built-ins infer from name.
+        locationType: categoryNames.includes(location) ? location : undefined,
       });
       toast.success(`${newId} was registered at ${location}.`);
       setSerialNumber("");

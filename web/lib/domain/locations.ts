@@ -95,7 +95,10 @@ export interface LocationGroup {
 // Locations that can accept a newly registered unit, grouped for a dropdown.
 // Storage / office / shop always accept units; single-slot spots (rooms,
 // hallway slots, elevator closet) are listed only when currently empty.
-export function availableLocationGroups(units: PtacUnit[]): LocationGroup[] {
+export function availableLocationGroups(
+  units: PtacUnit[],
+  customCategories: string[] = []
+): LocationGroup[] {
   const occupied = new Set(
     units.map((unit) => unit.current_location_name).filter((name): name is string => Boolean(name))
   );
@@ -105,6 +108,9 @@ export function availableLocationGroups(units: PtacUnit[]): LocationGroup[] {
   const groups: LocationGroup[] = [
     { label: "Storage & Holding", options: [SPARE_STORAGE, "Maintenance Office", "Doyle Shop"] },
   ];
+  // Custom categories (multi-capacity buckets) are always available.
+  const customOptions = customCategories.filter((name) => name !== "Elevator Closet");
+  if (customOptions.length) groups.push({ label: "Custom Locations", options: customOptions });
   if (openRooms.length) groups.push({ label: "Guest Rooms (empty)", options: openRooms });
   if (openCorridors.length) groups.push({ label: "Hallways (empty)", options: openCorridors });
   if (!occupied.has("Elevator Closet")) {

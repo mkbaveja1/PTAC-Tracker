@@ -21,11 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { statusForLocationType } from "@/lib/domain/locations";
+import { useEnabledLocationNames } from "@/lib/hooks/use-location-categories";
 import { useEditSpecsMutation } from "@/lib/hooks/use-unit-mutations";
 import type { PtacUnit } from "@/types/database";
 
-// Location types the editor exposes, with friendlier labels.
-const LOCATION_TYPE_CHOICES = [
+// Built-in location types, with friendlier labels. Custom categories from the
+// Manage Locations screen are appended at render time.
+const BUILTIN_TYPE_CHOICES = [
   { value: "Room", label: "Guest Room" },
   { value: "Hallway", label: "Hallway / Corridor" },
   { value: "Elevator Closet", label: "Elevator Closet" },
@@ -46,6 +48,14 @@ export function EditSpecsDialog({ unit, trigger }: { unit: PtacUnit; trigger: Re
   const [changedBy, setChangedBy] = useState("");
 
   const editSpecs = useEditSpecsMutation();
+
+  // Built-in types + any custom categories not already covered by a built-in.
+  const builtinValues = new Set(BUILTIN_TYPE_CHOICES.map((c) => c.value));
+  const categoryNames = useEnabledLocationNames();
+  const typeChoices = [
+    ...BUILTIN_TYPE_CHOICES,
+    ...categoryNames.filter((n) => !builtinValues.has(n)).map((n) => ({ value: n, label: n })),
+  ];
 
   const resetToUnit = () => {
     setModelSpecs(unit.model_specs ?? "");
@@ -151,7 +161,7 @@ export function EditSpecsDialog({ unit, trigger }: { unit: PtacUnit; trigger: Re
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {LOCATION_TYPE_CHOICES.map((choice) => (
+                    {typeChoices.map((choice) => (
                       <SelectItem key={choice.value} value={choice.value}>
                         {choice.label}
                       </SelectItem>

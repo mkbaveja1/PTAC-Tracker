@@ -44,6 +44,15 @@ export interface OnsiteRepair {
   repair_date: string | null;
 }
 
+export interface LocationCategory {
+  id: number;
+  name: string;
+  is_builtin: boolean;
+  enabled: boolean;
+  sort_order: number;
+  created_at?: string | null;
+}
+
 export interface DoyleRepair {
   doyle_id: number;
   ptac_id: string;

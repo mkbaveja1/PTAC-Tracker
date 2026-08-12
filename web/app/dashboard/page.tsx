@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 
+import { ManageLocationsDialog } from "@/components/dashboard/manage-locations-dialog";
 import { UnitTile } from "@/components/dashboard/unit-tile";
 import { FLOORS, ROOM_SUFFIXES } from "@/lib/domain/constants";
 import { effectiveDisplayStatus, isAtMaintenanceOffice } from "@/lib/domain/display";
+import { useLocationCategories } from "@/lib/hooks/use-location-categories";
 import { usePmIntervalMonths } from "@/lib/hooks/use-settings";
 import { useUnits } from "@/lib/hooks/use-units";
 import type { PtacUnit } from "@/types/database";
@@ -21,6 +23,7 @@ function hallwaySortKey(unit: PtacUnit): number {
 export default function DashboardPage() {
   const { data: allUnits = [], isLoading, error } = useUnits();
   const pmIntervalMonths = usePmIntervalMonths();
+  const { data: locationCategories = [] } = useLocationCategories();
 
   if (error) {
     return (
@@ -68,12 +71,32 @@ export default function DashboardPage() {
     )
     .sort((a, b) => hallwaySortKey(a) - hallwaySortKey(b));
 
+  // Generic sections come from the location_categories table. Before the table
+  // is set up (empty), fall back to the built-in Elevator Closet section so no
+  // units disappear; once configured, only the enabled categories show.
+  const categorySections: { title: string; units: PtacUnit[] }[] =
+    locationCategories.length > 0
+      ? locationCategories
+          .filter((c) => c.enabled)
+          .map((c) => ({
+            title: c.name,
+            units: allUnits.filter(
+              (u) => u.location_type === c.name || u.current_location_name === c.name
+            ),
+          }))
+      : [
+          {
+            title: "Elevator Closet",
+            units: allUnits.filter((u) => u.location_type === "Elevator Closet"),
+          },
+        ];
+
   const supportGroups: { title: string; units: PtacUnit[] }[] = [
     { title: "Corridors/Hallways", units: hallwayUnits },
-    { title: "Elevator Closet", units: allUnits.filter((u) => u.location_type === "Elevator Closet") },
     { title: "Maintenance Office Onsite", units: allUnits.filter((u) => isAtMaintenanceOffice(u)) },
     { title: "Doyle Repair Shop", units: allUnits.filter((u) => u.status === "Doyle Shop") },
     { title: "Spare Storage Closet", units: allUnits.filter((u) => u.location_type === "Spare") },
+    ...categorySections,
   ];
 
   const supportDisplayName = (title: string, unit: PtacUnit): string => {
@@ -125,12 +148,22 @@ export default function DashboardPage() {
             execute custody transfers, or review technician parts invoices.
           </p>
         </div>
-        <Link
-          href="/scanner"
-          className="whitespace-nowrap rounded-[14px] bg-blue-600 px-4.5 py-3 text-xs font-black text-white shadow-lg shadow-blue-600/25 transition-transform hover:-translate-y-px"
-        >
-          ▦ Launch QR Scanner
-        </Link>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <ManageLocationsDialog
+            units={allUnits}
+            trigger={
+              <button className="whitespace-nowrap rounded-[14px] border border-white/20 bg-white/10 px-4.5 py-3 text-xs font-black text-white transition-colors hover:bg-white/20">
+                ⚙ Manage Locations
+              </button>
+            }
+          />
+          <Link
+            href="/scanner"
+            className="whitespace-nowrap rounded-[14px] bg-blue-600 px-4.5 py-3 text-xs font-black text-white shadow-lg shadow-blue-600/25 transition-transform hover:-translate-y-px"
+          >
+            ▦ Launch QR Scanner
+          </Link>
+        </div>
       </div>
 
       {/* Legend */}
