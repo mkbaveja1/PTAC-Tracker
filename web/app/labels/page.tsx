@@ -43,8 +43,9 @@ export default function LabelsPage() {
   const filtered = useMemo(() => filterUnits(units, batch), [units, batch]);
   const filteredIds = filtered.map((unit) => unit.ptac_id);
 
-  // Default selection: first 10 of the current batch (matches Streamlit behavior).
-  const effectiveSelection = selectedIds ?? new Set(filteredIds.slice(0, 10));
+  // Nothing pre-selected — the user picks which labels to print (or uses
+  // "Select All Shown").
+  const effectiveSelection = selectedIds ?? new Set<string>();
 
   const toggleUnit = (ptacId: string, checked: boolean) => {
     const next = new Set(effectiveSelection);
