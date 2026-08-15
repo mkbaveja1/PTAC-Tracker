@@ -62,5 +62,9 @@ export interface DoyleRepair {
   labor_cost: number | null;
   parts_cost: number | null;
   total_cost?: number | null;
+  labor_rate1?: number | null;
+  labor_hours1?: number | null;
+  labor_rate2?: number | null;
+  labor_hours2?: number | null;
   is_completed: boolean | null;
 }

@@ -1,21 +1,17 @@
-// Doyle contractor completion flow, ported exactly from complete_doyle_repair()
-// and latest_doyle_dispatch_note() in _shared.py — including the
-// occupied-room displacement logic. Do not simplify.
+// Doyle contractor flow — two stages:
+//   1) markDoyleFixed: record the repair + bill; the unit stays at Doyle in a
+//      "fixed, awaiting shipment" state (a doyle_repairs row with
+//      is_completed = true and return_date = null).
+//   2) shipDoyleUnit: close that row (set return_date) and move the unit back
+//      to the hotel (Maintenance Office or Spare Storage).
 
 import { format } from "date-fns";
 
 import { supabase } from "@/lib/supabase/client";
-import {
-  inferLocationType,
-  occupantAtLocation,
-  targetStatusForLocation,
-} from "@/lib/domain/locations";
+import { updateUnitLocation } from "./units";
 import { fetchTransfers } from "./logs";
-import { fetchUnits, updateUnitLocation } from "./units";
 import { friendlyWriteError } from "./errors";
-import type { CustodyTransfer, PtacUnit } from "@/types/database";
-
-export const OCCUPIED_ROOM_OVERRIDE_REQUIRED = "occupied_room_override_required";
+import type { CustodyTransfer, DoyleRepair, PtacUnit } from "@/types/database";
 
 export function latestDoyleDispatchNote(ptacId: string, transfers: CustodyTransfer[]): string {
   for (const transfer of transfers) {
@@ -29,100 +25,100 @@ export function latestDoyleDispatchNote(ptacId: string, transfers: CustodyTransf
   return "Offsite dispatch to Doyle Repair Shop.";
 }
 
-export interface CompleteDoyleRepairInput {
+// A repair that's been marked fixed but not yet shipped back.
+export function isFixedAwaitingShipment(repair: DoyleRepair): boolean {
+  return Boolean(repair.is_completed) && !repair.return_date;
+}
+
+// The open "fixed, awaiting shipment" repair row for a unit, if any.
+export function openFixedRepair(ptacId: string, repairs: DoyleRepair[]): DoyleRepair | null {
+  return repairs.find((r) => r.ptac_id === ptacId && isFixedAwaitingShipment(r)) ?? null;
+}
+
+export interface MarkDoyleFixedInput {
   ptacId: string;
   unit: PtacUnit;
   technician: string;
   invoice: string;
-  totalBill: number;
   components: string[];
   extraParts: string;
   notes: string;
-  targetLocation: string;
-  // Explicit type for a custom category destination; omit to infer.
-  targetLocationType?: string;
-  overrideOccupied?: boolean;
+  partsCost: number;
+  laborRate1: number;
+  laborHours1: number;
+  laborRate2: number;
+  laborHours2: number;
 }
 
-export async function completeDoyleRepair(input: CompleteDoyleRepairInput): Promise<void> {
-  const allUnits = await fetchUnits();
-  let occupyingUnit: PtacUnit | null = null;
-  // Only a real single-slot guest room is occupancy-checked. A custom category
-  // (targetLocationType set) is a multi-capacity bucket — skip the check, or
-  // inferLocationType would misread its name as "Room".
-  if (
-    input.targetLocation &&
-    !input.targetLocationType &&
-    inferLocationType(input.targetLocation) === "Room"
-  ) {
-    occupyingUnit = occupantAtLocation(allUnits, input.targetLocation, input.ptacId);
-  }
+export function computeLaborCost(input: {
+  laborRate1: number;
+  laborHours1: number;
+  laborRate2: number;
+  laborHours2: number;
+}): number {
+  return (
+    (input.laborRate1 || 0) * (input.laborHours1 || 0) +
+    (input.laborRate2 || 0) * (input.laborHours2 || 0)
+  );
+}
 
-  if (occupyingUnit && !input.overrideOccupied) {
-    throw new Error(OCCUPIED_ROOM_OVERRIDE_REQUIRED);
-  }
-
+// Records the repair; the unit stays at Doyle Shop (fixed, awaiting shipment).
+export async function markDoyleFixed(input: MarkDoyleFixedInput): Promise<void> {
+  const laborCost = computeLaborCost(input);
+  const totalCost = laborCost + (input.partsCost || 0);
   const allParts = [
     ...input.components,
-    ...input.extraParts.split(",").map((part) => part.trim()).filter(Boolean),
+    ...input.extraParts.split(",").map((p) => p.trim()).filter(Boolean),
   ];
-  const targetType = input.targetLocationType ?? inferLocationType(input.targetLocation);
-  const targetStatus = targetStatusForLocation(input.targetLocation);
-  const technician = input.technician.trim();
-  const todayStr = format(new Date(), "yyyy-MM-dd");
 
-  // The unit was sent to Doyle when its custody transfer to the shop was
-  // logged — use that date, not today, so sent_date reflects reality.
+  // sent_date = when the unit was dispatched to Doyle (its custody transfer).
   const transfers = await fetchTransfers(input.ptacId);
-  const dispatchTransfer = transfers.find((transfer) =>
-    (transfer.to_location ?? "").includes("Doyle")
-  );
-  const sentDate = dispatchTransfer?.transfer_date
-    ? String(dispatchTransfer.transfer_date).slice(0, 10)
-    : todayStr;
+  const dispatch = transfers.find((t) => (t.to_location ?? "").includes("Doyle"));
+  const sentDate = dispatch?.transfer_date
+    ? String(dispatch.transfer_date).slice(0, 10)
+    : format(new Date(), "yyyy-MM-dd");
 
-  let transferNotes =
-    `Doyle return invoice ${input.invoice}. Parts: ${allParts.join(", ") || "None"}. ${input.notes}`.trim();
-
-  if (occupyingUnit) {
-    const overrideNote = `Occupied-location override: ${occupyingUnit.ptac_id} was moved to Maintenance Office.`;
-    transferNotes = `${transferNotes} ${overrideNote}`;
-    await updateUnitLocation({
-      ptacId: occupyingUnit.ptac_id,
-      status: "Maintenance Office",
-      location: "Maintenance Office",
-      technician,
-      notes: `Displaced by ${input.ptacId} Doyle return deployment to ${input.targetLocation}.`,
-    });
-  }
-
-  const { error: repairError } = await supabase.from("doyle_repairs").insert({
+  const { error } = await supabase.from("doyle_repairs").insert({
     ptac_id: input.ptacId,
     sent_date: sentDate,
-    return_date: todayStr,
-    doyle_diagnosis: `Invoice ${input.invoice}. ${input.notes}`.trim(),
-    labor_cost: 0,
-    parts_cost: input.totalBill,
+    return_date: null, // fixed but not shipped yet
+    doyle_diagnosis: `Invoice ${input.invoice}. Parts: ${allParts.join(", ") || "None"}. ${input.notes}`.trim(),
+    parts_cost: input.partsCost,
+    labor_cost: laborCost,
+    total_cost: totalCost,
+    labor_rate1: input.laborRate1,
+    labor_hours1: input.laborHours1,
+    labor_rate2: input.laborRate2,
+    labor_hours2: input.laborHours2,
     is_completed: true,
   });
-  if (repairError) throw repairError;
+  if (error) throw friendlyWriteError(error);
+}
 
-  const { error: transferError } = await supabase.from("custody_transfers").insert({
-    ptac_id: input.ptacId,
-    from_location: input.unit.current_location_name || "Doyle Shop",
-    to_location: input.targetLocation,
-    technician_name: technician,
-    notes: transferNotes,
+export interface ShipDoyleUnitInput {
+  ptacId: string;
+  unit: PtacUnit;
+  technician: string;
+  targetLocation: string; // "Maintenance Office" or the spare storage closet
+  repairId: number; // the open fixed repair to close
+}
+
+// Closes the open fixed repair (records the return date) and moves the unit
+// back to the hotel.
+export async function shipDoyleUnit(input: ShipDoyleUnitInput): Promise<void> {
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+
+  const { error: closeError } = await supabase
+    .from("doyle_repairs")
+    .update({ return_date: todayStr })
+    .eq("doyle_id", input.repairId);
+  if (closeError) throw closeError;
+
+  await updateUnitLocation({
+    ptacId: input.ptacId,
+    status: input.targetLocation === "Maintenance Office" ? "Maintenance Office" : "Active",
+    location: input.targetLocation,
+    technician: input.technician.trim() || "Doyle return",
+    notes: `Returned from Doyle Shop to ${input.targetLocation}.`,
   });
-  if (transferError) throw transferError;
-
-  const { error: updateError } = await supabase
-    .from("ptac_units")
-    .update({
-      status: targetStatus,
-      location_type: targetType,
-      current_location_name: input.targetLocation,
-    })
-    .eq("ptac_id", input.ptacId);
-  if (updateError) throw friendlyWriteError(updateError);
 }

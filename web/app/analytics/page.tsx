@@ -130,6 +130,9 @@ export default function AnalyticsPage() {
 
   const onsiteTotal = filteredOnsite.reduce((sum, row) => sum + (Number(row.repair_cost) || 0), 0);
   const doyleTotal = filteredDoyle.reduce((sum, row) => sum + doyleRepairCost(row), 0);
+  // Doyle bills split into parts vs labor.
+  const doyleParts = filteredDoyle.reduce((sum, row) => sum + (Number(row.parts_cost) || 0), 0);
+  const doyleLabor = filteredDoyle.reduce((sum, row) => sum + (Number(row.labor_cost) || 0), 0);
   const repairCount =
     filteredOnsite.length + filteredDoyle.filter((row) => doyleRepairCost(row) > 0).length;
   const avg = repairCount ? (onsiteTotal + doyleTotal) / repairCount : 0;
@@ -318,6 +321,25 @@ export default function AnalyticsPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Doyle parts vs labor split */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h4 className="mb-4 text-[15px] font-black text-slate-900">Doyle Spend — Parts vs Labor</h4>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl bg-slate-50 p-3">
+              <div className="text-[10px] font-black uppercase text-slate-400">Parts</div>
+              <div className="mt-1 text-lg font-black text-slate-900">{money(doyleParts)}</div>
+            </div>
+            <div className="rounded-xl bg-slate-50 p-3">
+              <div className="text-[10px] font-black uppercase text-slate-400">Labor</div>
+              <div className="mt-1 text-lg font-black text-slate-900">{money(doyleLabor)}</div>
+            </div>
+            <div className="rounded-xl bg-rose-50 p-3">
+              <div className="text-[10px] font-black uppercase text-rose-400">Doyle Total</div>
+              <div className="mt-1 text-lg font-black text-rose-800">{money(doyleTotal)}</div>
+            </div>
+          </div>
         </div>
 
         {/* Doyle shipments */}

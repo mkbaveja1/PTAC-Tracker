@@ -17,7 +17,12 @@ import {
   type RegisterOnsiteRepairInput,
   type RegisterPmInput,
 } from "@/lib/api/logs";
-import { completeDoyleRepair, type CompleteDoyleRepairInput } from "@/lib/api/doyle";
+import {
+  markDoyleFixed,
+  shipDoyleUnit,
+  type MarkDoyleFixedInput,
+  type ShipDoyleUnitInput,
+} from "@/lib/api/doyle";
 import {
   clearSpendingData,
   deleteHistoryRows,
@@ -58,10 +63,18 @@ export function useOnsiteRepairMutation() {
   });
 }
 
-export function useDoyleCompletionMutation() {
+export function useMarkDoyleFixedMutation() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (input: CompleteDoyleRepairInput) => completeDoyleRepair(input),
+    mutationFn: (input: MarkDoyleFixedInput) => markDoyleFixed(input),
+    onSuccess: () => invalidate(["units", "doyle_repairs"]),
+  });
+}
+
+export function useShipDoyleUnitMutation() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: ShipDoyleUnitInput) => shipDoyleUnit(input),
     onSuccess: () => invalidate(["units", "transfers", "doyle_repairs"]),
   });
 }

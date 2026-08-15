@@ -3,9 +3,15 @@
 
 export function friendlyWriteError(error: unknown): Error {
   const e = error as { message?: string } | null;
-  if (e?.message?.includes("asset_location_type")) {
+  const message = e?.message ?? "";
+  if (message.includes("asset_location_type")) {
     return new Error(
       "Custom locations need a one-time database update. Run supabase/location_type_to_text.sql in Supabase, then try again."
+    );
+  }
+  if (message.includes("labor_rate") || message.includes("labor_hours")) {
+    return new Error(
+      "Doyle labor billing needs a one-time database update. Run supabase/doyle_labor_columns.sql in Supabase, then try again."
     );
   }
   return error instanceof Error ? error : new Error(String(error));
