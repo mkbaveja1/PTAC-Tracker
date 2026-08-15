@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 
-import { btuFromModel } from "@/lib/domain/display";
 import { unitDetailUrl } from "@/lib/domain/urls";
 import type { PtacUnit } from "@/types/database";
 
@@ -35,12 +34,8 @@ function AveryLabel({ unit }: { unit: PtacUnit }) {
           PTAC Asset Tag
         </div>
         <div className="mb-1.5 text-2xl font-black leading-none text-slate-900">{unit.ptac_id}</div>
-        <div className="mb-0.5 text-[11px] font-bold text-slate-700">
-          {unit.current_location_name}
-        </div>
-        <div className="text-[10px] font-semibold text-slate-500">
-          {btuFromModel(unit.model_specs)} - S/N: {unit.serial_number}
-        </div>
+        <div className="mb-0.5 text-[11px] font-bold text-slate-700">{unit.model_specs}</div>
+        <div className="text-[10px] font-semibold text-slate-500">S/N: {unit.serial_number}</div>
       </div>
       <LabelQr ptacId={unit.ptac_id} />
     </div>
