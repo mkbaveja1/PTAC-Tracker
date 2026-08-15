@@ -47,7 +47,14 @@ export interface CompleteDoyleRepairInput {
 export async function completeDoyleRepair(input: CompleteDoyleRepairInput): Promise<void> {
   const allUnits = await fetchUnits();
   let occupyingUnit: PtacUnit | null = null;
-  if (input.targetLocation && inferLocationType(input.targetLocation) === "Room") {
+  // Only a real single-slot guest room is occupancy-checked. A custom category
+  // (targetLocationType set) is a multi-capacity bucket — skip the check, or
+  // inferLocationType would misread its name as "Room".
+  if (
+    input.targetLocation &&
+    !input.targetLocationType &&
+    inferLocationType(input.targetLocation) === "Room"
+  ) {
     occupyingUnit = occupantAtLocation(allUnits, input.targetLocation, input.ptacId);
   }
 
