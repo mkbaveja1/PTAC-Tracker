@@ -47,14 +47,14 @@ function AveryLabel({ unit }: { unit: PtacUnit }) {
   );
 }
 
-// One 2×5 Avery PLS-591PM-10 sheet (10 labels per page).
+// One 2×5 laser label sheet (10 labels per page), PLS-591 / 4in x 2in.
 export function AverySheet({ sheetNumber, units }: { sheetNumber: number; units: PtacUnit[] }) {
   const emptySlots = Math.max(0, 10 - units.length);
   return (
     <div className="avery-print-sheet mx-auto mb-4.5 max-w-[8.5in] rounded-[14px] border border-slate-300 bg-white px-4 pb-5 pt-4.5">
       <div className="print:hidden mb-3.5 flex items-center justify-between border-b border-slate-200 pb-2.5 text-[11px] font-bold text-slate-500">
         <strong className="text-xs text-slate-900">
-          Avery PLS-591PM-10 Thermal Sheet #{sheetNumber}
+          PLS-591 Laser Label Sheet #{sheetNumber}
         </strong>
         <span>10 Labels on Page (2 Columns x 5 Rows)</span>
       </div>

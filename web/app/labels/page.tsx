@@ -66,11 +66,11 @@ export default function LabelsPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-[28px] font-black tracking-tight text-slate-900">
-              Avery Thermal Sheet Printer
+              Laser Label Sheet Printer
             </h2>
             <p className="mt-1.5 max-w-2xl text-[13px] font-semibold leading-relaxed text-slate-500">
-              Formally laid out for Avery Manufacturer Part Number <strong>PLS-591PM-10</strong> (2
-              Columns x 5 Rows, 4&quot; x 2&quot; standard sticker labels).
+              Laid out for <strong>Premium Label Supply PLS-591</strong> laser labels (2 Columns x 5
+              Rows, 4&quot; x 2&quot;). Print at 100% scale, no headers/footers.
             </p>
           </div>
           <Button onClick={() => window.print()} disabled={printable.length === 0}>
@@ -148,16 +148,15 @@ export default function LabelsPage() {
         </div>
 
         <div className="mb-4.5 rounded-[14px] border border-amber-200 bg-amber-50 px-4 py-3.5 text-xs leading-relaxed text-amber-800">
-          <strong>Avery PLS-591PM-10 Specifications:</strong> 10 Labels per Sheet (4.0&quot; x
-          2.0&quot;). Perfect sizing for PTAC chassis. Selected labels use standard paper
-          configuration on print output.
+          <strong>PLS-591 Specifications:</strong> 10 Labels per Sheet (4.0&quot; x 2.0&quot;),
+          weatherproof, <strong>laser printers only</strong>. Perfect sizing for PTAC chassis.
         </div>
       </div>
 
       {/* Preview / print area */}
       <div className="avery-print-area rounded-[18px] border border-indigo-200 bg-indigo-50 p-4.5 print:border-0 print:bg-white print:p-0">
         <p className="print:hidden mb-3.5 text-center text-[11px] font-black tracking-[0.14em] text-slate-500">
-          AVERY PLS-591PM-10 PREVIEW LAYOUT
+          PLS-591 LASER LABEL PREVIEW LAYOUT
         </p>
         {printable.length === 0 ? (
           <p className="print:hidden py-8 text-center text-[13px] font-bold text-slate-400">

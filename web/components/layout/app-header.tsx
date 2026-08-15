@@ -10,7 +10,7 @@ const HOTEL_PAGES = [
   { label: "📊 Dashboard Grid", href: "/dashboard" },
   { label: "📋 Directory List", href: "/directory" },
   { label: "📸 Smart QR Scanner", href: "/scanner" },
-  { label: "🖨️ Avery Labels", href: "/labels" },
+  { label: "🖨️ Print Labels", href: "/labels" },
   { label: "💰 Spending Audits", href: "/analytics" },
 ];
 
