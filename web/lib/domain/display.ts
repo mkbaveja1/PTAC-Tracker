@@ -37,18 +37,18 @@ export function shortBtuFromModel(modelSpecs: string | null | undefined): string
   return btuFromModel(modelSpecs).replace(",000", "K");
 }
 
-// A unit is PM-overdue when its last PM (or its install date, if never
-// PM'd) is older than the configured interval. The interval is an app
-// setting (default 6 months = twice a year), not a hardcoded rule.
+// A unit needs PM when it has never had one logged, or its last PM is older
+// than the configured interval. So every unit shows "Needs PM" until its first
+// PM is recorded, then follows the schedule (default 6 months = twice a year).
 export function isPmOverdue(
   unit: PtacUnit | null | undefined,
   intervalMonths: number
 ): boolean {
   if (!unit) return false;
-  const reference = unit.last_pm_date ?? unit.created_at;
-  if (!reference) return false;
-  const referenceDate = new Date(String(reference).slice(0, 10));
-  if (isNaN(referenceDate.getTime())) return false;
+  // Never PM'd → needs PM until the first one is logged.
+  if (!unit.last_pm_date) return true;
+  const referenceDate = new Date(String(unit.last_pm_date).slice(0, 10));
+  if (isNaN(referenceDate.getTime())) return true;
   return addMonths(referenceDate, intervalMonths) <= new Date();
 }
 

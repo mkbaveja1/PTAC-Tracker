@@ -157,8 +157,10 @@ export default function DirectoryPage() {
         </Select>
       </div>
 
-      {/* Table — owner-polished styling; preserve look from views/directory.py */}
-      <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-sm">
+      {/* Table — horizontally scrollable on narrow screens (phones) so all
+          columns stay readable instead of squishing. */}
+      <div className="overflow-x-auto rounded-[18px] border border-slate-200 bg-white shadow-sm">
+        <div className="min-w-[860px]">
         <div className="grid grid-cols-[1fr_2.3fr_1.9fr_1.8fr_1.4fr_1.1fr] border-b border-slate-200 bg-slate-50">
           {["ID", "SPECS & SERIAL", "LOCATION", "OPERATIONAL STATUS", "LAST PM CHECK", "ACTIONS"].map(
             (header) => (
@@ -230,6 +232,7 @@ export default function DirectoryPage() {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
