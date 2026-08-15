@@ -21,6 +21,21 @@ import {
 } from "@/lib/hooks/use-location-categories";
 import type { PtacUnit } from "@/types/database";
 
+// Built-in types/routes a custom category must not shadow, or it would confuse
+// the transfer/edit/dashboard logic.
+const RESERVED_NAMES = new Set(
+  [
+    "Room",
+    "Guest Room",
+    "Hallway",
+    "Corridor/Hallway",
+    "Maintenance Office",
+    "Doyle Shop",
+    "Spare",
+    "Spare Storage",
+  ].map((n) => n.toLowerCase())
+);
+
 // Manage generic dashboard location categories (add / rename / hide / delete).
 // Maintenance Office and Doyle Shop are intentionally not here — they power the
 // PM/repair flow and the contractor portal and stay fixed.
@@ -49,6 +64,10 @@ export function ManageLocationsDialog({
   const handleAdd = async () => {
     if (!newName.trim()) {
       toast.error("Enter a location name.");
+      return;
+    }
+    if (RESERVED_NAMES.has(newName.trim().toLowerCase())) {
+      toast.error(`"${newName.trim()}" is a built-in location name. Choose a different name.`);
       return;
     }
     try {

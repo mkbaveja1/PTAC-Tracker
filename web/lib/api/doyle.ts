@@ -12,6 +12,7 @@ import {
 } from "@/lib/domain/locations";
 import { fetchTransfers } from "./logs";
 import { fetchUnits, updateUnitLocation } from "./units";
+import { friendlyWriteError } from "./errors";
 import type { CustodyTransfer, PtacUnit } from "@/types/database";
 
 export const OCCUPIED_ROOM_OVERRIDE_REQUIRED = "occupied_room_override_required";
@@ -38,6 +39,8 @@ export interface CompleteDoyleRepairInput {
   extraParts: string;
   notes: string;
   targetLocation: string;
+  // Explicit type for a custom category destination; omit to infer.
+  targetLocationType?: string;
   overrideOccupied?: boolean;
 }
 
@@ -56,7 +59,7 @@ export async function completeDoyleRepair(input: CompleteDoyleRepairInput): Prom
     ...input.components,
     ...input.extraParts.split(",").map((part) => part.trim()).filter(Boolean),
   ];
-  const targetType = inferLocationType(input.targetLocation);
+  const targetType = input.targetLocationType ?? inferLocationType(input.targetLocation);
   const targetStatus = targetStatusForLocation(input.targetLocation);
   const technician = input.technician.trim();
   const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -114,5 +117,5 @@ export async function completeDoyleRepair(input: CompleteDoyleRepairInput): Prom
       current_location_name: input.targetLocation,
     })
     .eq("ptac_id", input.ptacId);
-  if (updateError) throw updateError;
+  if (updateError) throw friendlyWriteError(updateError);
 }

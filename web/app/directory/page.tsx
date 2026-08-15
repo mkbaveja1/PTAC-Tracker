@@ -20,6 +20,7 @@ import {
   isAtMaintenanceOffice,
   statusPillClasses,
 } from "@/lib/domain/display";
+import { useEnabledLocationNames } from "@/lib/hooks/use-location-categories";
 import { usePmIntervalMonths } from "@/lib/hooks/use-settings";
 import { useUnits } from "@/lib/hooks/use-units";
 import type { PtacUnit } from "@/types/database";
@@ -54,7 +55,8 @@ function matchesLocationFilter(unit: PtacUnit, filter: string): boolean {
   if (filter === "Storage / Spares") return locationType === "Spare";
   if (filter === "Maintenance Office") return isAtMaintenanceOffice(unit);
   if (filter === "Doyle Shop") return status === "Doyle Shop" || locationType === "Doyle Shop";
-  return true;
+  // Custom category filters match by location type.
+  return locationType === filter;
 }
 
 function searchText(unit: PtacUnit): string {
@@ -73,6 +75,11 @@ function searchText(unit: PtacUnit): string {
 export default function DirectoryPage() {
   const { data: allUnits = [], isLoading, error } = useUnits();
   const pmIntervalMonths = usePmIntervalMonths();
+  const categoryNames = useEnabledLocationNames();
+  const locationFilters = [
+    ...LOCATION_FILTERS,
+    ...categoryNames.filter((name) => !LOCATION_FILTERS.includes(name) && name !== "Elevator Closet"),
+  ];
   const [showAddSpare, setShowAddSpare] = useState(false);
   const [query, setQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("All Locations");
@@ -131,7 +138,7 @@ export default function DirectoryPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {LOCATION_FILTERS.map((filter) => (
+            {locationFilters.map((filter) => (
               <SelectItem key={filter} value={filter}>
                 {filter}
               </SelectItem>

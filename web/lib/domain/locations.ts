@@ -150,8 +150,10 @@ export function allowedTransferPaths(): TransferRoute[] {
   ];
 }
 
+// Accepts built-in routes and custom category names (which resolve to
+// themselves via the final return).
 export function resolveTargetLocation(
-  route: TransferRoute | null,
+  route: string | null,
   roomChoice?: string | null,
   corridorChoice?: string | null
 ): string | null {

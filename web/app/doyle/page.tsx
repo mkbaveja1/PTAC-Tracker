@@ -20,6 +20,7 @@ import { CORE_COMPONENTS, SPARE_STORAGE } from "@/lib/domain/constants";
 import { btuFromModel, displayStatus } from "@/lib/domain/display";
 import { occupantAtLocation, roomOptions } from "@/lib/domain/locations";
 import { latestDoyleDispatchNote, OCCUPIED_ROOM_OVERRIDE_REQUIRED } from "@/lib/api/doyle";
+import { useEnabledLocationNames } from "@/lib/hooks/use-location-categories";
 import { useTransfers, useUnits } from "@/lib/hooks/use-units";
 import { useDoyleCompletionMutation } from "@/lib/hooks/use-unit-mutations";
 
@@ -54,6 +55,7 @@ export default function DoylePortalPage() {
   const { data: units = [] } = useUnits();
   const { data: transfers = [] } = useTransfers();
   const completion = useDoyleCompletionMutation();
+  const categoryNames = useEnabledLocationNames();
 
   const doyleUnits = useMemo(
     () => units.filter((unit) => displayStatus(unit) === "Doyle Shop"),
@@ -101,7 +103,14 @@ export default function DoylePortalPage() {
       return;
     }
 
-    const targetLocation = form.route === ROUTE_ROOM ? form.targetRoom! : SPARE_STORAGE;
+    // Route can be spare storage, a guest room, or a custom category name.
+    const isCategoryRoute = categoryNames.includes(form.route);
+    const targetLocation =
+      form.route === ROUTE_ROOM
+        ? form.targetRoom!
+        : form.route === ROUTE_SPARE
+          ? SPARE_STORAGE
+          : form.route;
     try {
       await completion.mutateAsync({
         ptacId: selectedUnit.ptac_id,
@@ -113,6 +122,7 @@ export default function DoylePortalPage() {
         extraParts: form.extraParts,
         notes: form.notes,
         targetLocation,
+        targetLocationType: isCategoryRoute ? form.route : undefined,
         overrideOccupied: form.overrideOccupied,
       });
       toast.success(`${selectedUnit.ptac_id} marked fixed and returned to ${targetLocation}.`);
@@ -227,7 +237,7 @@ export default function DoylePortalPage() {
                     }
                     className="flex flex-wrap gap-4"
                   >
-                    {[ROUTE_SPARE, ROUTE_ROOM].map((option) => (
+                    {[ROUTE_SPARE, ROUTE_ROOM, ...categoryNames].map((option) => (
                       <label
                         key={option}
                         className="flex items-center gap-2 text-xs font-bold text-slate-700"

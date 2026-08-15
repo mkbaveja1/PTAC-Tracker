@@ -30,8 +30,8 @@ import {
   resolveTargetLocation,
   roomOptions,
   targetStatusForLocation,
-  type TransferRoute,
 } from "@/lib/domain/locations";
+import { useEnabledLocationNames } from "@/lib/hooks/use-location-categories";
 import { useUnits } from "@/lib/hooks/use-units";
 import { useTransferMutation } from "@/lib/hooks/use-unit-mutations";
 import type { PtacUnit } from "@/types/database";
@@ -46,7 +46,7 @@ export function CustodyTransferDialog({
   trigger: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [route, setRoute] = useState<TransferRoute | null>(null);
+  const [route, setRoute] = useState<string | null>(null);
   const [roomChoice, setRoomChoice] = useState<string | null>(null);
   const [corridorChoice, setCorridorChoice] = useState<string | null>(null);
   const [overrideOccupied, setOverrideOccupied] = useState(false);
@@ -57,14 +57,21 @@ export function CustodyTransferDialog({
   const { data: allUnits = [] } = useUnits();
   const transferMutation = useTransferMutation();
 
-  const routeOptions = allowedTransferPaths();
+  // Built-in routes + custom categories (multi-capacity buckets like "Gym").
+  const categoryNames = useEnabledLocationNames();
+  const routeOptions: string[] = [
+    ...allowedTransferPaths(),
+    ...categoryNames.filter((name) => !allowedTransferPaths().includes(name as never)),
+  ];
   const targetLocation = resolveTargetLocation(route, roomChoice, corridorChoice);
+  const isCategoryTarget = targetLocation !== null && categoryNames.includes(targetLocation);
   const occupyingUnit = useMemo(
     () =>
-      targetLocation && isSingleOccupancyLocation(targetLocation)
+      // Custom categories hold any number of units — no occupancy check.
+      targetLocation && isSingleOccupancyLocation(targetLocation) && !isCategoryTarget
         ? occupantAtLocation(allUnits, targetLocation, unit.ptac_id)
         : null,
-    [allUnits, targetLocation, unit.ptac_id]
+    [allUnits, targetLocation, unit.ptac_id, isCategoryTarget]
   );
 
   // Prefilled transfer notes for the destination (matches the Streamlit default).
@@ -130,6 +137,8 @@ export function CustodyTransferDialog({
         location: targetLocation,
         technician: technician.trim(),
         notes: finalNotes,
+        // Custom categories are their own type; built-ins infer from the name.
+        locationType: isCategoryTarget ? targetLocation : undefined,
       });
       toast.success(`${unit.ptac_id} moved to ${targetLocation}.`);
       resetForm();
@@ -159,7 +168,7 @@ export function CustodyTransferDialog({
             <Select
               value={route ?? ""}
               onValueChange={(value) => {
-                setRoute(value as TransferRoute);
+                setRoute(value);
                 setRoomChoice(null);
                 setCorridorChoice(null);
                 onDestinationChange();

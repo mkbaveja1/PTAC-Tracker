@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { inferLocationType, statusForLocationType } from "@/lib/domain/locations";
+import { friendlyWriteError } from "./errors";
 import type { PtacUnit } from "@/types/database";
 
 const UNIT_COLUMNS =
@@ -59,7 +60,7 @@ export async function updateUnitLocation(input: UpdateUnitLocationInput): Promis
       location_type: input.locationType ?? inferLocationType(input.location),
     })
     .eq("ptac_id", input.ptacId);
-  if (updateError) throw updateError;
+  if (updateError) throw friendlyWriteError(updateError);
 }
 
 export interface RegisterSpareInput {
@@ -84,7 +85,7 @@ export async function registerSpareUnit(input: RegisterSpareInput): Promise<void
     location_type: locationType,
     status: statusForLocationType(locationType),
   });
-  if (error) throw error;
+  if (error) throw friendlyWriteError(error);
 }
 
 export interface EditUnitInput {
@@ -122,7 +123,7 @@ export async function editUnitSpecifications(input: EditUnitInput): Promise<void
       status: input.status,
     })
     .eq("ptac_id", input.ptacId);
-  if (error) throw error;
+  if (error) throw friendlyWriteError(error);
 }
 
 export async function deleteUnit(ptacId: string): Promise<void> {
