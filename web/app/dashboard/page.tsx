@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 
-import { ManageLocationsDialog } from "@/components/dashboard/manage-locations-dialog";
 import { UnitTile } from "@/components/dashboard/unit-tile";
 import { FLOORS, ROOM_SUFFIXES } from "@/lib/domain/constants";
 import { effectiveDisplayStatus, isAtMaintenanceOffice } from "@/lib/domain/display";
@@ -148,22 +147,12 @@ export default function DashboardPage() {
             execute custody transfers, or review technician parts invoices.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <ManageLocationsDialog
-            units={allUnits}
-            trigger={
-              <button className="whitespace-nowrap rounded-[14px] border border-white/20 bg-white/10 px-4.5 py-3 text-xs font-black text-white transition-colors hover:bg-white/20">
-                ⚙ Manage Locations
-              </button>
-            }
-          />
-          <Link
-            href="/scanner"
-            className="whitespace-nowrap rounded-[14px] bg-blue-600 px-4.5 py-3 text-xs font-black text-white shadow-lg shadow-blue-600/25 transition-transform hover:-translate-y-px"
-          >
-            ▦ Launch QR Scanner
-          </Link>
-        </div>
+        <Link
+          href="/scanner"
+          className="whitespace-nowrap rounded-[14px] bg-blue-600 px-4.5 py-3 text-xs font-black text-white shadow-lg shadow-blue-600/25 transition-transform hover:-translate-y-px"
+        >
+          ▦ Launch QR Scanner
+        </Link>
       </div>
 
       {/* Legend */}

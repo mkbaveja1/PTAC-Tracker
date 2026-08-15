@@ -12,6 +12,7 @@ const HOTEL_PAGES = [
   { label: "📸 Smart QR Scanner", href: "/scanner" },
   { label: "🖨️ Print Labels", href: "/labels" },
   { label: "💰 Spending Audits", href: "/analytics" },
+  { label: "⚙️ Settings", href: "/settings" },
 ];
 
 const CONTRACTOR_PAGES = [{ label: "🔧 Doyle Tech Portal", href: "/doyle" }];

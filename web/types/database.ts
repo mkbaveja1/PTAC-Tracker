@@ -31,7 +31,16 @@ export interface PmLog {
   coils_vacuumed_inspected: boolean | null;
   wiring_thermostat_calibrated: boolean | null;
   blower_fan_centered_oiled: boolean | null;
+  completed_tasks?: string | null; // JSON array of completed item labels
   date_performed: string | null;
+}
+
+export interface PmChecklistItem {
+  id: number;
+  label: string;
+  enabled: boolean;
+  sort_order: number;
+  created_at?: string | null;
 }
 
 export interface OnsiteRepair {

@@ -20,10 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { displayStatus, doyleRepairCost, effectiveDisplayStatus } from "@/lib/domain/display";
-import { usePmIntervalMonths, useUpdatePmIntervalMutation } from "@/lib/hooks/use-settings";
+import { usePmIntervalMonths } from "@/lib/hooks/use-settings";
 import { useClearSpendingMutation } from "@/lib/hooks/use-unit-mutations";
 import {
   useDoyleRepairs,
@@ -79,27 +78,6 @@ export default function AnalyticsPage() {
   const clearSpending = useClearSpendingMutation();
 
   const pmIntervalMonths = usePmIntervalMonths();
-  const updatePmInterval = useUpdatePmIntervalMutation();
-  // null → show the saved value; a string → user is editing
-  const [intervalDraft, setIntervalDraft] = useState<string | null>(null);
-  const intervalValue = intervalDraft ?? String(pmIntervalMonths);
-
-  const handleSaveInterval = async () => {
-    const months = parseInt(intervalValue, 10);
-    if (!Number.isFinite(months) || months < 1 || months > 24) {
-      toast.error("PM interval must be between 1 and 24 months.");
-      return;
-    }
-    try {
-      await updatePmInterval.mutateAsync(months);
-      setIntervalDraft(null);
-      toast.success(
-        `Routine PM schedule set to every ${months} month${months === 1 ? "" : "s"}.`
-      );
-    } catch (error) {
-      toast.error((error as Error).message);
-    }
-  };
 
   const handleClear = async () => {
     if (!clearRepairSpend && !clearPmLogs) {
@@ -142,7 +120,6 @@ export default function AnalyticsPage() {
   ).length;
   const compliance = units.length ? Math.round(((units.length - pmDue) / units.length) * 100) : 0;
   const doyleUnits = units.filter((unit) => displayStatus(unit) === "Doyle Shop");
-  const checksPerYear = Math.round((12 / pmIntervalMonths) * 10) / 10;
 
   // Highest repair expenses grouped per unit (top 10).
   const costByUnit = new Map<string, number>();
@@ -211,59 +188,22 @@ export default function AnalyticsPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="mt-4 flex flex-wrap items-end gap-4">
-        <div className="w-full max-w-xs">
-          <Label className="mb-1.5 block text-[11px] font-black uppercase tracking-wide text-slate-500">
-            Repair Spend Window
-          </Label>
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {WINDOWS.map((window) => (
-                <SelectItem key={window} value={window}>
-                  {window}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Routine PM schedule — stored in app_settings, not hardcoded */}
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <Label
-            htmlFor="pm-interval"
-            className="mb-1.5 block text-[11px] font-black uppercase tracking-wide text-slate-500"
-          >
-            Routine PM Schedule
-          </Label>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-600">Every</span>
-            <Input
-              id="pm-interval"
-              type="number"
-              min={1}
-              max={24}
-              className="w-20"
-              value={intervalValue}
-              onChange={(event) => setIntervalDraft(event.target.value)}
-            />
-            <span className="text-xs font-bold text-slate-600">
-              month{parseInt(intervalValue, 10) === 1 ? "" : "s"} (~{checksPerYear}×/year)
-            </span>
-            <Button
-              size="sm"
-              disabled={intervalDraft === null || updatePmInterval.isPending}
-              onClick={handleSaveInterval}
-            >
-              {updatePmInterval.isPending ? "Saving…" : "Save"}
-            </Button>
-          </div>
-          <p className="mt-1.5 text-[11px] font-semibold text-slate-400">
-            Active units past this schedule show as &quot;Needs PM&quot; across the app.
-          </p>
-        </div>
+      <div className="mt-4 w-full max-w-xs">
+        <Label className="mb-1.5 block text-[11px] font-black uppercase tracking-wide text-slate-500">
+          Repair Spend Window
+        </Label>
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {WINDOWS.map((window) => (
+              <SelectItem key={window} value={window}>
+                {window}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

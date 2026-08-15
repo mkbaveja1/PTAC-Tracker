@@ -30,6 +30,15 @@ export const CORE_COMPONENTS = [
   "Solder Repair",
 ] as const;
 
+// Default PM checklist items — used as the seed and as the fallback before the
+// pm_checklist_items table is set up. Must match the seed in pm_checklist.sql.
+export const DEFAULT_PM_TASKS = [
+  "Filters washed / replaced",
+  "Coils vacuumed & inspected",
+  "Wiring & thermostat calibrated",
+  "Blower fan centered & oiled",
+] as const;
+
 // Spare registration model choices (views/directory.py)
 export const MODEL_OPTIONS = [
   "Amana PTAC12-Standard",

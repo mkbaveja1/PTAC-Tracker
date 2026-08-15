@@ -15,30 +15,34 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useEnabledPmTasks } from "@/lib/hooks/use-pm-checklist";
 import { usePmMutation } from "@/lib/hooks/use-unit-mutations";
 import type { PtacUnit } from "@/types/database";
 
-const PM_TASKS = [
-  { key: "filters", label: "Filters washed / replaced" },
-  { key: "coils", label: "Coils vacuumed & inspected" },
-  { key: "wiring", label: "Wiring & thermostat calibrated" },
-  { key: "blower", label: "Blower fan centered & oiled" },
-] as const;
-
-// Port of render_pm_form(): all 4 tasks required; unit moves to Maintenance
-// Office first if needed and stays there after PM.
+// Renders the current (editable) PM checklist; every item is required. The unit
+// moves to Maintenance Office first if needed and stays there after PM.
 export function PmDialog({ unit, trigger }: { unit: PtacUnit; trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [technician, setTechnician] = useState("");
   const [notes, setNotes] = useState("");
-  const [tasks, setTasks] = useState({ filters: false, coils: false, wiring: false, blower: false });
+  const [checked, setChecked] = useState<Set<string>>(new Set());
 
+  const { tasks, configured } = useEnabledPmTasks();
   const pmMutation = usePmMutation();
 
   const resetForm = () => {
     setTechnician("");
     setNotes("");
-    setTasks({ filters: false, coils: false, wiring: false, blower: false });
+    setChecked(new Set());
+  };
+
+  const toggle = (label: string, isChecked: boolean) => {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (isChecked) next.add(label);
+      else next.delete(label);
+      return next;
+    });
   };
 
   const handleSubmit = async () => {
@@ -46,8 +50,13 @@ export function PmDialog({ unit, trigger }: { unit: PtacUnit; trigger: React.Rea
       toast.error("Technician name is required.");
       return;
     }
-    if (!(tasks.filters && tasks.coils && tasks.wiring && tasks.blower)) {
-      toast.error("All four PM checklist items must be checked before logging PM completion.");
+    if (tasks.length === 0) {
+      toast.error("No PM checklist items are set up. Add some in Settings first.");
+      return;
+    }
+    const allChecked = tasks.every((label) => checked.has(label));
+    if (!allChecked) {
+      toast.error("Every PM checklist item must be checked before logging PM completion.");
       return;
     }
 
@@ -56,7 +65,8 @@ export function PmDialog({ unit, trigger }: { unit: PtacUnit; trigger: React.Rea
         unit,
         technician: technician.trim(),
         notes,
-        tasks,
+        completedTasks: tasks,
+        storeCompletedTasks: configured,
       });
       toast.success(
         "Preventative maintenance logged. Unit remains at Maintenance Office until deployed back."
@@ -99,18 +109,16 @@ export function PmDialog({ unit, trigger }: { unit: PtacUnit; trigger: React.Rea
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {PM_TASKS.map((task) => (
+            {tasks.map((label) => (
               <label
-                key={task.key}
+                key={label}
                 className="flex items-start gap-2 text-xs font-semibold text-slate-700"
               >
                 <Checkbox
-                  checked={tasks[task.key]}
-                  onCheckedChange={(checked) =>
-                    setTasks((prev) => ({ ...prev, [task.key]: checked === true }))
-                  }
+                  checked={checked.has(label)}
+                  onCheckedChange={(value) => toggle(label, value === true)}
                 />
-                {task.label}
+                {label}
               </label>
             ))}
           </div>

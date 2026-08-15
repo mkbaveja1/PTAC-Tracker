@@ -73,11 +73,21 @@ export function HistoryFeed({ unit }: { unit: PtacUnit }) {
   }
 
   for (const log of pmLogs) {
-    const checks: string[] = [];
-    if (log.filters_washed_replaced) checks.push("filters");
-    if (log.coils_vacuumed_inspected) checks.push("coils");
-    if (log.wiring_thermostat_calibrated) checks.push("wiring");
-    if (log.blower_fan_centered_oiled) checks.push("blower fan");
+    // Prefer the stored checklist snapshot; fall back to the legacy booleans.
+    let checks: string[] = [];
+    if (log.completed_tasks) {
+      try {
+        checks = JSON.parse(log.completed_tasks) as string[];
+      } catch {
+        checks = [];
+      }
+    }
+    if (checks.length === 0) {
+      if (log.filters_washed_replaced) checks.push("filters");
+      if (log.coils_vacuumed_inspected) checks.push("coils");
+      if (log.wiring_thermostat_calibrated) checks.push("wiring");
+      if (log.blower_fan_centered_oiled) checks.push("blower fan");
+    }
     events.push({
       date: log.date_performed ?? "",
       title: "Preventative Maintenance",

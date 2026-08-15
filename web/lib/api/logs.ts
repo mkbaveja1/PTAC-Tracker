@@ -49,18 +49,15 @@ export async function fetchDoyleRepairs(ptacId?: string): Promise<DoyleRepair[]>
   return data ?? [];
 }
 
-export interface PmTasks {
-  filters: boolean;
-  coils: boolean;
-  wiring: boolean;
-  blower: boolean;
-}
-
 export interface RegisterPmInput {
   unit: PtacUnit;
   technician: string;
   notes: string;
-  tasks: PmTasks;
+  // Labels of the checklist items that were completed (all enabled items).
+  completedTasks: string[];
+  // Whether the pm_checklist_items table is configured (so completed_tasks can
+  // be stored). Off before the migration is run — legacy booleans only.
+  storeCompletedTasks: boolean;
 }
 
 // PM work is logged from the Maintenance Office: the unit moves there first
@@ -76,15 +73,22 @@ export async function registerPmLog(input: RegisterPmInput): Promise<void> {
     });
   }
 
-  const { error: insertError } = await supabase.from("pm_logs").insert({
+  const done = new Set(input.completedTasks);
+  const row: Record<string, unknown> = {
     ptac_id: input.unit.ptac_id,
     technician_name: input.technician,
-    filters_washed_replaced: input.tasks.filters,
-    coils_vacuumed_inspected: input.tasks.coils,
-    wiring_thermostat_calibrated: input.tasks.wiring,
-    blower_fan_centered_oiled: input.tasks.blower,
+    // Keep the legacy boolean columns in sync for the default items.
+    filters_washed_replaced: done.has("Filters washed / replaced"),
+    coils_vacuumed_inspected: done.has("Coils vacuumed & inspected"),
+    wiring_thermostat_calibrated: done.has("Wiring & thermostat calibrated"),
+    blower_fan_centered_oiled: done.has("Blower fan centered & oiled"),
     diagnostic_notes: input.notes,
-  });
+  };
+  if (input.storeCompletedTasks) {
+    row.completed_tasks = JSON.stringify(input.completedTasks);
+  }
+
+  const { error: insertError } = await supabase.from("pm_logs").insert(row);
   if (insertError) throw insertError;
 
   const { error: updateError } = await supabase
