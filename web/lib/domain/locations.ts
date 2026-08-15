@@ -63,11 +63,11 @@ export function targetStatusForLocation(location: string): string {
   return "Active";
 }
 
-// Only single-slot locations can be "occupied": one PTAC per guest room,
-// hallway slot, or elevator closet. Maintenance Office, Doyle Shop, and
-// Spare Storage hold any number of units at once.
+// Only fixed single-slot locations can be "occupied": one PTAC per guest room
+// or hallway slot. Everything else — the office, shop, spare storage, and any
+// custom category — holds any number of units.
 export function isSingleOccupancyLocation(location: string): boolean {
-  return ["Room", "Hallway", "Elevator Closet"].includes(inferLocationType(location));
+  return ["Room", "Hallway"].includes(inferLocationType(location));
 }
 
 // Any unit physically at the target location occupies it — regardless of its
@@ -93,8 +93,8 @@ export interface LocationGroup {
 }
 
 // Locations that can accept a newly registered unit, grouped for a dropdown.
-// Storage / office / shop always accept units; single-slot spots (rooms,
-// hallway slots, elevator closet) are listed only when currently empty.
+// Storage / office / shop and custom categories always accept units; single-
+// slot spots (rooms, hallway slots) are listed only when currently empty.
 export function availableLocationGroups(
   units: PtacUnit[],
   customCategories: string[] = []
@@ -109,13 +109,11 @@ export function availableLocationGroups(
     { label: "Storage & Holding", options: [SPARE_STORAGE, "Maintenance Office", "Doyle Shop"] },
   ];
   // Custom categories (multi-capacity buckets) are always available.
-  const customOptions = customCategories.filter((name) => name !== "Elevator Closet");
-  if (customOptions.length) groups.push({ label: "Custom Locations", options: customOptions });
+  if (customCategories.length) {
+    groups.push({ label: "Custom Locations", options: customCategories });
+  }
   if (openRooms.length) groups.push({ label: "Guest Rooms (empty)", options: openRooms });
   if (openCorridors.length) groups.push({ label: "Hallways (empty)", options: openCorridors });
-  if (!occupied.has("Elevator Closet")) {
-    groups.push({ label: "Elevator Closet", options: ["Elevator Closet"] });
-  }
   return groups;
 }
 
@@ -131,19 +129,17 @@ export function nextPtacId(units: PtacUnit[]): string {
 export type TransferRoute =
   | "Guest Room"
   | "Corridor/Hallway"
-  | "Elevator Closet"
   | "Spare Storage"
   | "Maintenance Office"
   | "Doyle Shop";
 
-// Any unit can be moved to any destination. The earlier state-based
-// restrictions were removed at the owner's request so a custody transfer is
-// never blocked by a unit's current location or status.
+// Fixed transfer destinations. Elevator Closet and any other generic location
+// come from the location_categories table (appended by the dialog), so a
+// removed location no longer appears anywhere.
 export function allowedTransferPaths(): TransferRoute[] {
   return [
     "Guest Room",
     "Corridor/Hallway",
-    "Elevator Closet",
     "Spare Storage",
     "Maintenance Office",
     "Doyle Shop",
@@ -160,7 +156,7 @@ export function resolveTargetLocation(
   if (!route) return null;
   if (route === "Guest Room") return roomChoice ?? null;
   if (route === "Corridor/Hallway") return corridorChoice ?? null;
-  if (route === "Elevator Closet") return "Elevator Closet";
   if (route === "Spare Storage") return SPARE_STORAGE;
+  // Fixed locations and custom categories resolve to their own name.
   return route;
 }

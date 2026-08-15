@@ -30,7 +30,6 @@ import type { PtacUnit } from "@/types/database";
 const BUILTIN_TYPE_CHOICES = [
   { value: "Room", label: "Guest Room" },
   { value: "Hallway", label: "Hallway / Corridor" },
-  { value: "Elevator Closet", label: "Elevator Closet" },
   { value: "Maintenance Office", label: "Maintenance Office" },
   { value: "Doyle Shop", label: "Doyle Shop" },
   { value: "Spare", label: "Spare / Storage" },

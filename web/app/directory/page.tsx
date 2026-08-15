@@ -29,7 +29,6 @@ const LOCATION_FILTERS = [
   "All Locations",
   "Guest Rooms",
   "Hallways",
-  "Elevator Closet",
   "Storage / Spares",
   "Maintenance Office",
   "Doyle Shop",
@@ -51,7 +50,6 @@ function matchesLocationFilter(unit: PtacUnit, filter: string): boolean {
   if (filter === "All Locations") return true;
   if (filter === "Guest Rooms") return locationType === "Room";
   if (filter === "Hallways") return locationType === "Hallway";
-  if (filter === "Elevator Closet") return locationType === "Elevator Closet";
   if (filter === "Storage / Spares") return locationType === "Spare";
   if (filter === "Maintenance Office") return isAtMaintenanceOffice(unit);
   if (filter === "Doyle Shop") return status === "Doyle Shop" || locationType === "Doyle Shop";
@@ -78,7 +76,7 @@ export default function DirectoryPage() {
   const categoryNames = useEnabledLocationNames();
   const locationFilters = [
     ...LOCATION_FILTERS,
-    ...categoryNames.filter((name) => !LOCATION_FILTERS.includes(name) && name !== "Elevator Closet"),
+    ...categoryNames.filter((name) => !LOCATION_FILTERS.includes(name)),
   ];
   const [showAddSpare, setShowAddSpare] = useState(false);
   const [query, setQuery] = useState("");
