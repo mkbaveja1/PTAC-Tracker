@@ -22,7 +22,8 @@ function hallwaySortKey(unit: PtacUnit): number {
 export default function DashboardPage() {
   const { data: allUnits = [], isLoading, error } = useUnits();
   const pmIntervalMonths = usePmIntervalMonths();
-  const { data: locationCategories = [] } = useLocationCategories();
+  // null = table not set up; undefined = loading; array = configured.
+  const { data: locationCategories } = useLocationCategories();
 
   if (error) {
     return (
@@ -70,25 +71,20 @@ export default function DashboardPage() {
     )
     .sort((a, b) => hallwaySortKey(a) - hallwaySortKey(b));
 
-  // Generic sections come from the location_categories table. Before the table
-  // is set up (empty), fall back to the built-in Elevator Closet section so no
-  // units disappear; once configured, only the enabled categories show.
+  const unitsInLocation = (name: string) =>
+    allUnits.filter((u) => u.location_type === name || u.current_location_name === name);
+
+  // Generic sections come from the location_categories table. null means the
+  // table isn't set up yet → fall back to the built-in Elevator Closet section
+  // so nothing disappears. Once set up, show each location that's enabled OR
+  // still has units (so hiding one with units in it doesn't orphan them). An
+  // emptied table shows no custom sections — a deleted location stays gone.
   const categorySections: { title: string; units: PtacUnit[] }[] =
-    locationCategories.length > 0
-      ? locationCategories
-          .filter((c) => c.enabled)
-          .map((c) => ({
-            title: c.name,
-            units: allUnits.filter(
-              (u) => u.location_type === c.name || u.current_location_name === c.name
-            ),
-          }))
-      : [
-          {
-            title: "Elevator Closet",
-            units: allUnits.filter((u) => u.location_type === "Elevator Closet"),
-          },
-        ];
+    locationCategories === null
+      ? [{ title: "Elevator Closet", units: unitsInLocation("Elevator Closet") }]
+      : (locationCategories ?? [])
+          .filter((c) => c.enabled || unitsInLocation(c.name).length > 0)
+          .map((c) => ({ title: c.name, units: unitsInLocation(c.name) }));
 
   const supportGroups: { title: string; units: PtacUnit[] }[] = [
     { title: "Corridors/Hallways", units: hallwayUnits },

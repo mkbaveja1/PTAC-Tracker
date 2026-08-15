@@ -28,7 +28,8 @@ export function LocationsManager({ units }: { units: PtacUnit[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
 
-  const { data: categories = [] } = useLocationCategories();
+  const { data } = useLocationCategories();
+  const categories = data ?? [];
   const addCategory = useAddCategoryMutation();
   const renameCategory = useRenameCategoryMutation();
   const toggleCategory = useToggleCategoryMutation();

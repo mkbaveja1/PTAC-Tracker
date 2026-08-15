@@ -20,7 +20,8 @@ export function PmChecklistManager() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingLabel, setEditingLabel] = useState("");
 
-  const { data: items = [] } = usePmChecklistItems();
+  const { data } = usePmChecklistItems();
+  const items = data ?? [];
   const addItem = useAddPmItemMutation();
   const renameItem = useRenamePmItemMutation();
   const toggleItem = useTogglePmItemMutation();

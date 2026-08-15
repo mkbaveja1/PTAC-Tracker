@@ -20,10 +20,10 @@ export function useLocationCategories() {
 }
 
 // Enabled categories only, as plain names — what the rest of the app offers as
-// destinations / types.
+// destinations / types. null (not set up) and undefined (loading) → none.
 export function useEnabledLocationNames(): string[] {
-  const { data = [] } = useLocationCategories();
-  return data.filter((c: LocationCategory) => c.enabled).map((c) => c.name);
+  const { data } = useLocationCategories();
+  return (data ?? []).filter((c: LocationCategory) => c.enabled).map((c) => c.name);
 }
 
 function useCategoryMutation<T>(fn: (arg: T) => Promise<void>) {

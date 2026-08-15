@@ -29,8 +29,11 @@ export interface PmChecklistState {
 }
 
 export function useEnabledPmTasks(): PmChecklistState {
-  const { data = [] } = usePmChecklistItems();
-  if (data.length === 0) {
+  const { data } = usePmChecklistItems();
+  // null (not set up) or undefined (loading) → built-in fallback so PM logging
+  // still works. An empty array (set up but all items deleted) is "configured"
+  // — the defaults do NOT come back.
+  if (!data) {
     return { tasks: [...DEFAULT_PM_TASKS], configured: false };
   }
   return {

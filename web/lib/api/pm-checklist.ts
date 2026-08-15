@@ -12,14 +12,16 @@ function isMissingTable(error: { code?: string } | null): boolean {
 const MISSING_TABLE_MESSAGE =
   "PM checklist table not found. Run supabase/pm_checklist.sql once in the Supabase SQL Editor, then try again.";
 
-export async function fetchPmChecklistItems(): Promise<PmChecklistItem[]> {
+// Returns null when the table doesn't exist yet (not set up), vs [] when it's
+// set up but empty — so deleting all items doesn't bring the defaults back.
+export async function fetchPmChecklistItems(): Promise<PmChecklistItem[] | null> {
   const { data, error } = await supabase
     .from("pm_checklist_items")
     .select("*")
     .order("sort_order")
     .order("label");
   if (error) {
-    if (isMissingTable(error)) return [];
+    if (isMissingTable(error)) return null;
     throw error;
   }
   return data ?? [];

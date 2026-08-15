@@ -13,14 +13,16 @@ function isMissingTable(error: { code?: string } | null): boolean {
 const MISSING_TABLE_MESSAGE =
   "Locations table not found. Run supabase/location_categories.sql once in the Supabase SQL Editor, then try again.";
 
-export async function fetchLocationCategories(): Promise<LocationCategory[]> {
+// Returns null when the table doesn't exist yet (not set up), vs [] when it's
+// set up but empty — so a deleted location never reappears from a fallback.
+export async function fetchLocationCategories(): Promise<LocationCategory[] | null> {
   const { data, error } = await supabase
     .from("location_categories")
     .select("*")
     .order("sort_order")
     .order("name");
   if (error) {
-    if (isMissingTable(error)) return [];
+    if (isMissingTable(error)) return null;
     throw error;
   }
   return data ?? [];
