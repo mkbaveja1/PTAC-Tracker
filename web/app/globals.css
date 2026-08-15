@@ -147,7 +147,15 @@
   animation: pm-pulse 2s infinite ease-in-out;
 }
 
-/* Avery label printing: only the label sheets appear on paper */
+/* Avery label printing — calibrated to the 4in x 2in 10-up die-cut layout
+   (PLS-591PM-10 / Avery 5163): 0.5in top+bottom margins, 0.15625in side
+   margins, 0.1875in column gutter, no row gap. Remove the browser's own page
+   margin so positions land on the physical labels. */
+@page {
+  size: letter portrait;
+  margin: 0;
+}
+
 @media print {
   header,
   nav {
@@ -155,14 +163,42 @@
   }
   main {
     max-width: none !important;
+    margin: 0 !important;
     padding: 0 !important;
   }
   .avery-print-sheet {
+    box-sizing: border-box !important;
+    width: 8.5in !important;
+    height: 11in !important;
+    max-width: none !important;
     border: none !important;
     border-radius: 0 !important;
-    max-width: none !important;
     margin: 0 !important;
-    padding: 0.5in 0.15in !important;
+    padding: 0.5in 0.15625in !important;
     page-break-after: always;
+    break-after: page;
+  }
+  .avery-print-sheet .avery-grid {
+    display: grid !important;
+    grid-template-columns: 4in 4in !important;
+    column-gap: 0.1875in !important;
+    row-gap: 0 !important;
+    gap: 0 0.1875in !important;
+  }
+  .avery-print-label {
+    box-sizing: border-box !important;
+    width: 4in !important;
+    height: 2in !important;
+    min-height: 2in !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0.14in 0.2in !important;
+    overflow: hidden !important;
+  }
+  /* Keep QR codes crisp and colors accurate on paper */
+  .avery-print-label img {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }

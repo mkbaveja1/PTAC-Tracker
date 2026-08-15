@@ -29,7 +29,7 @@ function LabelQr({ ptacId }: { ptacId: string }) {
 
 function AveryLabel({ unit }: { unit: PtacUnit }) {
   return (
-    <div className="flex min-h-[1.9in] items-center justify-between gap-2.5 rounded-xl border border-slate-300 bg-white px-3.5 py-3">
+    <div className="avery-print-label flex min-h-[1.9in] items-center justify-between gap-2.5 rounded-xl border border-slate-300 bg-white px-3.5 py-3">
       <div className="min-w-0 flex-1">
         <div className="mb-1.5 text-[8px] font-extrabold uppercase tracking-[0.1em] text-slate-400">
           PTAC Asset Tag
@@ -58,12 +58,12 @@ export function AverySheet({ sheetNumber, units }: { sheetNumber: number; units:
         </strong>
         <span>10 Labels on Page (2 Columns x 5 Rows)</span>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="avery-grid grid grid-cols-2 gap-3">
         {units.map((unit) => (
           <AveryLabel key={unit.ptac_id} unit={unit} />
         ))}
         {Array.from({ length: emptySlots }).map((_, index) => (
-          <div key={`empty-${index}`} className="min-h-[1.9in] invisible" />
+          <div key={`empty-${index}`} className="avery-print-label min-h-[1.9in] invisible" />
         ))}
       </div>
     </div>
