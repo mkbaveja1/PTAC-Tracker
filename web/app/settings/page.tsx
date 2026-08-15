@@ -2,6 +2,7 @@
 
 import { LocationsManager } from "@/components/settings/locations-manager";
 import { PmChecklistManager } from "@/components/settings/pm-checklist-manager";
+import { PmDueSetting } from "@/components/settings/pm-due-setting";
 import { PmScheduleSetting } from "@/components/settings/pm-schedule-setting";
 import { useUnits } from "@/lib/hooks/use-units";
 
@@ -47,6 +48,13 @@ export default function SettingsPage() {
         description="The items technicians complete for each PM. All enabled items are required."
       >
         <PmChecklistManager />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Flag a Unit for PM"
+        description="Manually mark a specific unit as due for maintenance."
+      >
+        <PmDueSetting />
       </SettingsSection>
 
       <SettingsSection

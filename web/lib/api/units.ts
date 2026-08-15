@@ -130,3 +130,13 @@ export async function deleteUnit(ptacId: string): Promise<void> {
   const { error } = await supabase.from("ptac_units").delete().eq("ptac_id", ptacId);
   if (error) throw error;
 }
+
+// Manually flag a unit as due for PM: clear its last PM date so it reads as
+// "Needs PM" until a PM is logged. Past PM logs are untouched.
+export async function markUnitDueForPM(ptacId: string): Promise<void> {
+  const { error } = await supabase
+    .from("ptac_units")
+    .update({ last_pm_date: null })
+    .eq("ptac_id", ptacId);
+  if (error) throw error;
+}

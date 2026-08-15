@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteUnit,
   editUnitSpecifications,
+  markUnitDueForPM,
   registerSpareUnit,
   updateUnitLocation,
   type EditUnitInput,
@@ -100,6 +101,14 @@ export function useDeleteUnitMutation() {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (ptacId: string) => deleteUnit(ptacId),
+    onSuccess: () => invalidate(["units"]),
+  });
+}
+
+export function useMarkDueForPmMutation() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (ptacId: string) => markUnitDueForPM(ptacId),
     onSuccess: () => invalidate(["units"]),
   });
 }
