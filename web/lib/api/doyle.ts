@@ -65,7 +65,6 @@ export function computeLaborCost(input: {
 // Records the repair; the unit stays at Doyle Shop (fixed, awaiting shipment).
 export async function markDoyleFixed(input: MarkDoyleFixedInput): Promise<void> {
   const laborCost = computeLaborCost(input);
-  const totalCost = laborCost + (input.partsCost || 0);
   const allParts = [
     ...input.components,
     ...input.extraParts.split(",").map((p) => p.trim()).filter(Boolean),
@@ -78,6 +77,7 @@ export async function markDoyleFixed(input: MarkDoyleFixedInput): Promise<void> 
     ? String(dispatch.transfer_date).slice(0, 10)
     : format(new Date(), "yyyy-MM-dd");
 
+  // total_cost is a generated column in the DB (labor + parts) — don't insert it.
   const { error } = await supabase.from("doyle_repairs").insert({
     ptac_id: input.ptacId,
     sent_date: sentDate,
@@ -85,7 +85,6 @@ export async function markDoyleFixed(input: MarkDoyleFixedInput): Promise<void> 
     doyle_diagnosis: `Invoice ${input.invoice}. Parts: ${allParts.join(", ") || "None"}. ${input.notes}`.trim(),
     parts_cost: input.partsCost,
     labor_cost: laborCost,
-    total_cost: totalCost,
     labor_rate1: input.laborRate1,
     labor_hours1: input.laborHours1,
     labor_rate2: input.laborRate2,

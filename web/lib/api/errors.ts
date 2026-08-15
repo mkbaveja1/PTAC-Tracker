@@ -2,7 +2,7 @@
 // written before the location_type column has been converted to text.
 
 export function friendlyWriteError(error: unknown): Error {
-  const e = error as { message?: string } | null;
+  const e = error as { message?: string; details?: string; hint?: string } | null;
   const message = e?.message ?? "";
   if (message.includes("asset_location_type")) {
     return new Error(
@@ -14,5 +14,13 @@ export function friendlyWriteError(error: unknown): Error {
       "Doyle labor billing needs a one-time database update. Run supabase/doyle_labor_columns.sql in Supabase, then try again."
     );
   }
-  return error instanceof Error ? error : new Error(String(error));
+  if (error instanceof Error) return error;
+  // Supabase errors are plain objects — pull out their message/details rather
+  // than stringifying to "[object Object]".
+  if (message) return new Error(details(e) ? `${message} (${details(e)})` : message);
+  return new Error(String(error));
+}
+
+function details(e: { details?: string; hint?: string } | null): string {
+  return e?.details || e?.hint || "";
 }
