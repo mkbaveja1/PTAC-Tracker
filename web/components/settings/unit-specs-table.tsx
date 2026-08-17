@@ -35,12 +35,15 @@ function SpecRow({ unit }: { unit: PtacUnit }) {
   };
 
   return (
-    <div className="grid grid-cols-[110px_1fr_1fr_84px] items-center gap-2 border-b border-slate-100 px-2 py-2 last:border-b-0">
+    <div className="grid grid-cols-[96px_1.2fr_1fr_1fr_80px] items-center gap-2 border-b border-slate-100 px-2 py-2 last:border-b-0">
       <span className="inline-block w-fit rounded-[7px] border border-slate-200 bg-slate-100 px-2 py-1 text-xs font-black text-slate-900">
         {unit.ptac_id}
       </span>
       <Input value={model} onChange={(e) => setModel(e.target.value)} className="h-9" />
       <Input value={serial} onChange={(e) => setSerial(e.target.value)} className="h-9" />
+      <span className="truncate text-xs font-bold text-slate-600" title={unit.current_location_name ?? ""}>
+        {unit.current_location_name}
+      </span>
       <Button
         size="sm"
         variant={dirty ? "default" : "outline"}
@@ -63,7 +66,10 @@ export function UnitSpecsTable() {
     const q = query.trim().toLowerCase();
     if (!q) return sorted;
     return sorted.filter((u) =>
-      [u.ptac_id, u.model_specs ?? "", u.serial_number ?? ""].join(" ").toLowerCase().includes(q)
+      [u.ptac_id, u.model_specs ?? "", u.serial_number ?? "", u.current_location_name ?? ""]
+        .join(" ")
+        .toLowerCase()
+        .includes(q)
     );
   }, [units, query]);
 
@@ -80,11 +86,12 @@ export function UnitSpecsTable() {
       />
 
       <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <div className="min-w-[560px]">
-          <div className="grid grid-cols-[110px_1fr_1fr_84px] gap-2 border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-black uppercase tracking-[0.06em] text-slate-500">
+        <div className="min-w-[680px]">
+          <div className="grid grid-cols-[96px_1.2fr_1fr_1fr_80px] gap-2 border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-black uppercase tracking-[0.06em] text-slate-500">
             <span>ID</span>
             <span>Model</span>
             <span>Serial</span>
+            <span>Location</span>
             <span />
           </div>
           <div className="max-h-[520px] overflow-y-auto">

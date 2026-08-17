@@ -1,6 +1,7 @@
 "use client";
 
 import { LocationsManager } from "@/components/settings/locations-manager";
+import { ModelOptionsManager } from "@/components/settings/model-options-manager";
 import { PmChecklistManager } from "@/components/settings/pm-checklist-manager";
 import { PmDueSetting } from "@/components/settings/pm-due-setting";
 import { PmScheduleSetting } from "@/components/settings/pm-schedule-setting";
@@ -56,6 +57,13 @@ export default function SettingsPage() {
         description="Manually mark a specific unit as due for maintenance."
       >
         <PmDueSetting />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Unit Models"
+        description="PTAC models offered when registering a new unit."
+      >
+        <ModelOptionsManager />
       </SettingsSection>
 
       <SettingsSection

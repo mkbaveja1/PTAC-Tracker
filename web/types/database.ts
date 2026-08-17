@@ -43,6 +43,14 @@ export interface PmChecklistItem {
   created_at?: string | null;
 }
 
+export interface ModelOption {
+  id: number;
+  name: string;
+  enabled: boolean;
+  sort_order: number;
+  created_at?: string | null;
+}
+
 export interface OnsiteRepair {
   repair_id: number;
   ptac_id: string;

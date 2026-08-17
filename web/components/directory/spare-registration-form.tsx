@@ -15,9 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MODEL_OPTIONS, SPARE_STORAGE } from "@/lib/domain/constants";
+import { SPARE_STORAGE } from "@/lib/domain/constants";
 import { availableLocationGroups, nextPtacId } from "@/lib/domain/locations";
 import { useEnabledLocationNames } from "@/lib/hooks/use-location-categories";
+import { useEnabledModelNames } from "@/lib/hooks/use-model-options";
 import { useRegisterSpareMutation } from "@/lib/hooks/use-unit-mutations";
 import type { PtacUnit } from "@/types/database";
 
@@ -30,7 +31,8 @@ export function SpareRegistrationForm({
   allUnits: PtacUnit[];
   onDone: () => void;
 }) {
-  const [modelSpecs, setModelSpecs] = useState<string>(MODEL_OPTIONS[0]);
+  // null draft → default to the first available model; a string → user picked.
+  const [modelDraft, setModelDraft] = useState<string | null>(null);
   const [serialNumber, setSerialNumber] = useState("");
   const [location, setLocation] = useState(SPARE_STORAGE);
 
@@ -38,6 +40,8 @@ export function SpareRegistrationForm({
   const newId = nextPtacId(allUnits);
   const categoryNames = useEnabledLocationNames();
   const locationGroups = availableLocationGroups(allUnits, categoryNames);
+  const modelOptions = useEnabledModelNames();
+  const modelSpecs = modelDraft ?? modelOptions[0] ?? "";
 
   const handleSubmit = async () => {
     if (!serialNumber.trim()) {
@@ -46,6 +50,10 @@ export function SpareRegistrationForm({
     }
     if (!location) {
       toast.error("Choose a location for the new unit.");
+      return;
+    }
+    if (!modelSpecs) {
+      toast.error("No models available. Add one in Settings → Unit Models.");
       return;
     }
     try {
@@ -85,12 +93,12 @@ export function SpareRegistrationForm({
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-2">
           <Label>Model Specifications</Label>
-          <Select value={modelSpecs} onValueChange={setModelSpecs}>
+          <Select value={modelSpecs} onValueChange={setModelDraft}>
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="Choose a model..." />
             </SelectTrigger>
             <SelectContent>
-              {MODEL_OPTIONS.map((model) => (
+              {modelOptions.map((model) => (
                 <SelectItem key={model} value={model}>
                   {model}
                 </SelectItem>
