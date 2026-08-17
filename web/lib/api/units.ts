@@ -131,6 +131,19 @@ export async function deleteUnit(ptacId: string): Promise<void> {
   if (error) throw error;
 }
 
+// Lightweight spec-only update (model + serial) for the settings spec table.
+export async function updateUnitModelSerial(
+  ptacId: string,
+  modelSpecs: string,
+  serialNumber: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("ptac_units")
+    .update({ model_specs: modelSpecs, serial_number: serialNumber })
+    .eq("ptac_id", ptacId);
+  if (error) throw error;
+}
+
 // Manually flag a unit as due for PM: clear its last PM date so it reads as
 // "Needs PM" until a PM is logged. Past PM logs are untouched.
 export async function markUnitDueForPM(ptacId: string): Promise<void> {

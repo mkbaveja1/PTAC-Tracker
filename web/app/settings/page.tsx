@@ -4,6 +4,7 @@ import { LocationsManager } from "@/components/settings/locations-manager";
 import { PmChecklistManager } from "@/components/settings/pm-checklist-manager";
 import { PmDueSetting } from "@/components/settings/pm-due-setting";
 import { PmScheduleSetting } from "@/components/settings/pm-schedule-setting";
+import { UnitSpecsTable } from "@/components/settings/unit-specs-table";
 import { useUnits } from "@/lib/hooks/use-units";
 
 function SettingsSection({
@@ -62,6 +63,13 @@ export default function SettingsPage() {
         description="Generic dashboard locations units can be assigned to."
       >
         <LocationsManager units={units} />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Unit Specifications"
+        description="Edit each unit's model and serial number in one place."
+      >
+        <UnitSpecsTable />
       </SettingsSection>
     </div>
   );

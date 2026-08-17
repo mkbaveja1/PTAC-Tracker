@@ -8,6 +8,7 @@ import {
   markUnitDueForPM,
   registerSpareUnit,
   updateUnitLocation,
+  updateUnitModelSerial,
   type EditUnitInput,
   type RegisterSpareInput,
   type UpdateUnitLocationInput,
@@ -109,6 +110,15 @@ export function useMarkDueForPmMutation() {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (ptacId: string) => markUnitDueForPM(ptacId),
+    onSuccess: () => invalidate(["units"]),
+  });
+}
+
+export function useUpdateSpecsMutation() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: { ptacId: string; modelSpecs: string; serialNumber: string }) =>
+      updateUnitModelSerial(input.ptacId, input.modelSpecs, input.serialNumber),
     onSuccess: () => invalidate(["units"]),
   });
 }
