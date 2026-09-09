@@ -13,9 +13,13 @@ import type { PtacUnit } from "@/types/database";
 function SpecRow({ unit }: { unit: PtacUnit }) {
   const [model, setModel] = useState(unit.model_specs ?? "");
   const [serial, setSerial] = useState(unit.serial_number ?? "");
+  const [mfgDate, setMfgDate] = useState(unit.manufacturing_date ?? "");
   const save = useUpdateSpecsMutation();
 
-  const dirty = model !== (unit.model_specs ?? "") || serial !== (unit.serial_number ?? "");
+  const dirty =
+    model !== (unit.model_specs ?? "") ||
+    serial !== (unit.serial_number ?? "") ||
+    mfgDate !== (unit.manufacturing_date ?? "");
 
   const handleSave = async () => {
     if (!model.trim() || !serial.trim()) {
@@ -27,6 +31,8 @@ function SpecRow({ unit }: { unit: PtacUnit }) {
         ptacId: unit.ptac_id,
         modelSpecs: model.trim(),
         serialNumber: serial.trim(),
+        // Manufacturing date is optional — empty clears it.
+        manufacturingDate: mfgDate.trim() || null,
       });
       toast.success(`${unit.ptac_id} updated.`);
     } catch (error) {
@@ -35,12 +41,18 @@ function SpecRow({ unit }: { unit: PtacUnit }) {
   };
 
   return (
-    <div className="grid grid-cols-[96px_1.2fr_1fr_1fr_80px] items-center gap-2 border-b border-slate-100 px-2 py-2 last:border-b-0">
+    <div className="grid grid-cols-[88px_1.2fr_1fr_0.95fr_1fr_72px] items-center gap-2 border-b border-slate-100 px-2 py-2 last:border-b-0">
       <span className="inline-block w-fit rounded-[7px] border border-slate-200 bg-slate-100 px-2 py-1 text-xs font-black text-slate-900">
         {unit.ptac_id}
       </span>
       <Input value={model} onChange={(e) => setModel(e.target.value)} className="h-9" />
       <Input value={serial} onChange={(e) => setSerial(e.target.value)} className="h-9" />
+      <Input
+        value={mfgDate}
+        onChange={(e) => setMfgDate(e.target.value)}
+        className="h-9"
+        placeholder="e.g. 2019-06"
+      />
       <span className="truncate text-xs font-bold text-slate-600" title={unit.current_location_name ?? ""}>
         {unit.current_location_name}
       </span>
@@ -66,7 +78,13 @@ export function UnitSpecsTable() {
     const q = query.trim().toLowerCase();
     if (!q) return sorted;
     return sorted.filter((u) =>
-      [u.ptac_id, u.model_specs ?? "", u.serial_number ?? "", u.current_location_name ?? ""]
+      [
+        u.ptac_id,
+        u.model_specs ?? "",
+        u.serial_number ?? "",
+        u.manufacturing_date ?? "",
+        u.current_location_name ?? "",
+      ]
         .join(" ")
         .toLowerCase()
         .includes(q)
@@ -76,7 +94,7 @@ export function UnitSpecsTable() {
   return (
     <div className="space-y-3">
       <p className="text-xs font-semibold text-slate-500">
-        Edit model and serial inline. Change a field and hit Save on that row.
+        Edit model, serial, and manufacturing date inline. Change a field and hit Save on that row.
       </p>
 
       <Input
@@ -86,11 +104,12 @@ export function UnitSpecsTable() {
       />
 
       <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <div className="min-w-[680px]">
-          <div className="grid grid-cols-[96px_1.2fr_1fr_1fr_80px] gap-2 border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-black uppercase tracking-[0.06em] text-slate-500">
+        <div className="min-w-[820px]">
+          <div className="grid grid-cols-[88px_1.2fr_1fr_0.95fr_1fr_72px] gap-2 border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-black uppercase tracking-[0.06em] text-slate-500">
             <span>ID</span>
             <span>Model</span>
             <span>Serial</span>
+            <span>Mfg Date</span>
             <span>Location</span>
             <span />
           </div>

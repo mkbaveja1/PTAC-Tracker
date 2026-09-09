@@ -14,6 +14,11 @@ export function friendlyWriteError(error: unknown): Error {
       "Doyle labor billing needs a one-time database update. Run supabase/doyle_labor_columns.sql in Supabase, then try again."
     );
   }
+  if (message.includes("manufacturing_date")) {
+    return new Error(
+      "The manufacturing date needs a one-time database update. Run supabase/manufacturing_date.sql in Supabase, then try again."
+    );
+  }
   if (error instanceof Error) return error;
   // Supabase errors are plain objects — pull out their message/details rather
   // than stringifying to "[object Object]".

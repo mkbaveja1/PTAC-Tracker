@@ -36,6 +36,9 @@ function AveryLabel({ unit }: { unit: PtacUnit }) {
         <div className="mb-1.5 text-2xl font-black leading-none text-slate-900">{unit.ptac_id}</div>
         <div className="mb-0.5 text-[11px] font-bold text-slate-700">{unit.model_specs}</div>
         <div className="text-[10px] font-semibold text-slate-500">S/N: {unit.serial_number}</div>
+        {unit.manufacturing_date && (
+          <div className="text-[10px] font-semibold text-slate-500">Mfg: {unit.manufacturing_date}</div>
+        )}
       </div>
       <LabelQr ptacId={unit.ptac_id} />
     </div>

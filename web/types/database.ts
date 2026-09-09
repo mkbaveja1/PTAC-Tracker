@@ -5,6 +5,10 @@ export interface PtacUnit {
   ptac_id: string;
   serial_number: string | null;
   model_specs: string | null;
+  // Free-text nameplate manufacturing date (e.g. "2019-06"). Optional because
+  // the column is added by supabase/manufacturing_date.sql — it may not exist
+  // yet, in which case reads (select "*") simply omit it.
+  manufacturing_date?: string | null;
   current_location_name: string | null;
   location_type: string | null;
   status: string | null;

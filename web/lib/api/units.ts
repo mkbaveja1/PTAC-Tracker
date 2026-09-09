@@ -5,13 +5,13 @@ import { inferLocationType, statusForLocationType } from "@/lib/domain/locations
 import { friendlyWriteError } from "./errors";
 import type { PtacUnit } from "@/types/database";
 
-const UNIT_COLUMNS =
-  "ptac_id, serial_number, model_specs, current_location_name, location_type, status, last_pm_date, created_at";
-
+// select("*") (not an explicit column list) so an optional column added by a
+// later migration — e.g. manufacturing_date — doesn't break these core reads
+// before its SQL is run. Extra columns are harmless; consumers use typed fields.
 export async function fetchUnits(): Promise<PtacUnit[]> {
   const { data, error } = await supabase
     .from("ptac_units")
-    .select(UNIT_COLUMNS)
+    .select("*")
     .order("ptac_id");
   if (error) throw error;
   return data ?? [];
@@ -20,7 +20,7 @@ export async function fetchUnits(): Promise<PtacUnit[]> {
 export async function fetchUnit(ptacId: string): Promise<PtacUnit | null> {
   const { data, error } = await supabase
     .from("ptac_units")
-    .select(UNIT_COLUMNS)
+    .select("*")
     .eq("ptac_id", ptacId)
     .maybeSingle();
   if (error) throw error;
@@ -131,17 +131,25 @@ export async function deleteUnit(ptacId: string): Promise<void> {
   if (error) throw error;
 }
 
-// Lightweight spec-only update (model + serial) for the settings spec table.
+// Lightweight spec-only update (model + serial + manufacturing date) for the
+// settings spec table. manufacturingDate is free text or null (cleared).
 export async function updateUnitModelSerial(
   ptacId: string,
   modelSpecs: string,
-  serialNumber: string
+  serialNumber: string,
+  manufacturingDate: string | null
 ): Promise<void> {
   const { error } = await supabase
     .from("ptac_units")
-    .update({ model_specs: modelSpecs, serial_number: serialNumber })
+    .update({
+      model_specs: modelSpecs,
+      serial_number: serialNumber,
+      manufacturing_date: manufacturingDate,
+    })
     .eq("ptac_id", ptacId);
-  if (error) throw error;
+  // friendlyWriteError surfaces the "run manufacturing_date.sql" hint if the
+  // column doesn't exist yet.
+  if (error) throw friendlyWriteError(error);
 }
 
 // Manually flag a unit as due for PM: clear its last PM date so it reads as

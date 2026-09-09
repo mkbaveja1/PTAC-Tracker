@@ -117,8 +117,18 @@ export function useMarkDueForPmMutation() {
 export function useUpdateSpecsMutation() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (input: { ptacId: string; modelSpecs: string; serialNumber: string }) =>
-      updateUnitModelSerial(input.ptacId, input.modelSpecs, input.serialNumber),
+    mutationFn: (input: {
+      ptacId: string;
+      modelSpecs: string;
+      serialNumber: string;
+      manufacturingDate: string | null;
+    }) =>
+      updateUnitModelSerial(
+        input.ptacId,
+        input.modelSpecs,
+        input.serialNumber,
+        input.manufacturingDate
+      ),
     onSuccess: () => invalidate(["units"]),
   });
 }
