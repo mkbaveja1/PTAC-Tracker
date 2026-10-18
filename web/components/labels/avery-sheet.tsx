@@ -6,6 +6,21 @@ import QRCode from "qrcode";
 import { unitDetailUrl } from "@/lib/domain/urls";
 import type { PtacUnit } from "@/types/database";
 
+// Compact location shown in the bottom-left of a label: drop the type word so
+// "Room 624" -> "624", "Floor 2B" -> "2B", "Suite 211-A" -> "211-A", and any
+// storage closet -> "Storage". Other locations (Maintenance Office, Doyle Shop,
+// custom categories) are shown as-is.
+function shortLabelLocation(name: string): string {
+  const value = name.trim();
+  if (/storage/i.test(value)) return "Storage";
+  return value
+    .replace(/^Room\s+/i, "")
+    .replace(/^Suite\s+/i, "")
+    .replace(/^Floor\s+/i, "")
+    .replace(/\s+(Corridor|Hallway)$/i, "")
+    .trim();
+}
+
 function LabelQr({ ptacId }: { ptacId: string }) {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
 
@@ -41,7 +56,7 @@ function AveryLabel({ unit }: { unit: PtacUnit }) {
         )}
         {unit.current_location_name && (
           <div className="mt-auto pt-1 text-[10px] font-semibold text-slate-500">
-            {unit.current_location_name}
+            {shortLabelLocation(unit.current_location_name)}
           </div>
         )}
       </div>
