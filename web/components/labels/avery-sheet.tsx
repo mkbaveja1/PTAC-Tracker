@@ -28,8 +28,8 @@ function LabelQr({ ptacId }: { ptacId: string }) {
 
 function AveryLabel({ unit }: { unit: PtacUnit }) {
   return (
-    <div className="avery-print-label flex min-h-[1.9in] items-center justify-between gap-2.5 rounded-xl border border-slate-300 bg-white px-3.5 py-3">
-      <div className="min-w-0 flex-1">
+    <div className="avery-print-label flex min-h-[1.9in] items-stretch justify-between gap-2.5 rounded-xl border border-slate-300 bg-white px-3.5 py-3">
+      <div className="flex min-w-0 flex-1 flex-col">
         <div className="mb-1.5 text-[8px] font-extrabold uppercase tracking-[0.1em] text-slate-400">
           PTAC Asset Tag
         </div>
@@ -40,10 +40,14 @@ function AveryLabel({ unit }: { unit: PtacUnit }) {
           <div className="text-[10px] font-semibold text-slate-500">Mfg: {unit.manufacturing_date}</div>
         )}
         {unit.current_location_name && (
-          <div className="text-[10px] font-semibold text-slate-500">Room: {unit.current_location_name}</div>
+          <div className="mt-auto pt-1 text-[10px] font-semibold text-slate-500">
+            {unit.current_location_name}
+          </div>
         )}
       </div>
-      <LabelQr ptacId={unit.ptac_id} />
+      <div className="flex shrink-0 items-center">
+        <LabelQr ptacId={unit.ptac_id} />
+      </div>
     </div>
   );
 }
